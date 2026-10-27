@@ -1,37 +1,44 @@
-<div style="max-width: 900px; margin: 0 auto;">
-  <h2>👤 3. จัดการข้อมูลลูกค้า</h2>
-
-  <!-- ฟอร์มเพิ่มลูกค้า -->
-  <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
-    <h3 style="margin-top:0;">+ เพิ่มลูกค้าใหม่</h3>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-      <input [(ngModel)]="newCustomer.name" placeholder="ชื่อลูกค้า" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
-      <input [(ngModel)]="newCustomer.phone" placeholder="เบอร์โทรศัพท์" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
-      <input [(ngModel)]="newCustomer.address" placeholder="ที่อยู่ / อาคาร" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
-      <input type="number" [(ngModel)]="newCustomer.distanceKm" placeholder="ระยะทางจากร้าน (กม.)" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
+<div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="margin: 0; font-size: 1.5rem; color: #0f172a;">👤 จัดการข้อมูลลูกค้า</h2>
+      <p style="margin: 0.2rem 0 0 0; color: #64748b; font-size: 0.9rem;">บันทึกและจัดการรายชื่อลูกค้าเพื่อใช้เปิดออเดอร์ส่งข้าวกล่อง</p>
     </div>
-    <button (click)="addCustomer()" style="margin-top: 1rem; background: #16a34a; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer;">บันทึกเพิ่มลูกค้า</button>
   </div>
 
-  <!-- ตารางแสดงรายการลูกค้า -->
-  <table style="width: 100%; border-collapse: collapse; text-align: left;">
+  <!-- Form เพิ่มลูกค้า -->
+  <div style="background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+    <h4 style="margin: 0 0 1rem 0; color: #334155;">+ เพิ่มลูกค้าใหม่เข้าระบบ</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.8rem;">
+      <input [(ngModel)]="newCustomer.name" placeholder="ชื่อ-นามสกุล" style="padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;" />
+      <input [(ngModel)]="newCustomer.phone" placeholder="เบอร์โทรศัพท์" style="padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;" />
+      <input [(ngModel)]="newCustomer.address" placeholder="ที่อยู่ / อาคาร / ชั้น" style="padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;" />
+      <input type="number" [(ngModel)]="newCustomer.distanceKm" placeholder="ระยะทาง (กม.)" style="padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;" />
+    </div>
+    <button (click)="addCustomer()" style="margin-top: 1rem; background: #16a34a; color: white; border: none; padding: 0.6rem 1.4rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+      บันทึกข้อมูลลูกค้า
+    </button>
+  </div>
+
+  <!-- Table -->
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
     <thead>
-      <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
-        <th style="padding: 0.75rem;">ชื่อ</th>
-        <th style="padding: 0.75rem;">เบอร์โทร</th>
-        <th style="padding: 0.75rem;">ที่อยู่</th>
-        <th style="padding: 0.75rem;">ระยะทาง (กม.)</th>
-        <th style="padding: 0.75rem;">จัดการ</th>
+      <tr style="background: #f1f5f9; color: #475569; text-align: left; border-bottom: 2px solid #e2e8f0;">
+        <th style="padding: 0.8rem 1rem;">ชื่อลูกค้า</th>
+        <th style="padding: 0.8rem 1rem;">เบอร์โทรศัพท์</th>
+        <th style="padding: 0.8rem 1rem;">สถานที่จัดส่ง</th>
+        <th style="padding: 0.8rem 1rem;">ระยะทางจากร้าน</th>
+        <th style="padding: 0.8rem 1rem; text-align: center;">จัดการ</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let c of customers" style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 0.75rem;">{{ c.name }}</td>
-        <td style="padding: 0.75rem;">{{ c.phone }}</td>
-        <td style="padding: 0.75rem;">{{ c.address }}</td>
-        <td style="padding: 0.75rem;">{{ c.distanceKm }} กม.</td>
-        <td style="padding: 0.75rem;">
-          <button (click)="deleteCustomer(c.id)" style="background: #ef4444; color: white; border: none; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer;">ลบ</button>
+      <tr *ngFor="let c of customers" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+        <td style="padding: 0.8rem 1rem; font-weight: 600; color: #1e293b;">{{ c.name }}</td>
+        <td style="padding: 0.8rem 1rem; color: #475569;">{{ c.phone }}</td>
+        <td style="padding: 0.8rem 1rem; color: #475569;">{{ c.address }}</td>
+        <td style="padding: 0.8rem 1rem;"><span style="background: #f1f5f9; color: #475569; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">📍 {{ c.distanceKm }} กม.</span></td>
+        <td style="padding: 0.8rem 1rem; text-align: center;">
+          <button (click)="deleteCustomer(c.id)" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">ลบ</button>
         </td>
       </tr>
     </tbody>

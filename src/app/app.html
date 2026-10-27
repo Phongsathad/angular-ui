@@ -1,19 +1,35 @@
-<nav style="background: #0f172a; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; color: white; font-family: 'Segoe UI', sans-serif;">
-  <div style="font-size: 1.25rem; font-weight: bold; display: flex; align-items: center; gap: 0.6rem;">
-    <span>🍱</span> ร้านข้าวกล่องส่งด่วนมื้อเที่ยง
+<nav style="background: #0f172a; padding: 0.8rem 2rem; display: flex; align-items: center; justify-content: space-between; color: white; font-family: 'Segoe UI', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+  <!-- Brand Logo -->
+  <div style="font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.5px;">
+    <span style="font-size: 1.5rem;">🍱</span> 
+    <span>BentoExpress <span style="font-size: 0.75rem; background: #3b82f6; padding: 2px 8px; border-radius: 12px; font-weight: 500; margin-left: 4px;">SYSTEM</span></span>
   </div>
-  <div style="display: flex; gap: 0.8rem; align-items: center;">
-    <span style="color: #64748b; font-size: 0.85rem; margin-right: 0.5rem;">[ Owner Dashboard ]</span>
-    <a routerLink="/customers" routerLinkActive="active-link" style="color: #cbd5e1; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px;">1. จัดการลูกค้า</a>
-    <a routerLink="/orders" routerLinkActive="active-link" style="color: #cbd5e1; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px;">2. จัดการออเดอร์</a>
-    <a routerLink="/route-optimization" routerLinkActive="active-link" style="color: #cbd5e1; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px;">3. จัดเส้นทาง & กำไร</a>
+
+  <!-- Navigation Menu -->
+  <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <span style="color: #64748b; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-right: 0.5rem; letter-spacing: 0.5px;">Owner Mode</span>
     
-    <div style="width: 1px; height: 24px; background: #334155; margin: 0 0.5rem;"></div>
+    <a routerLink="/customers" routerLinkActive="active-nav" style="color: #94a3b8; text-decoration: none; padding: 0.56rem 1.1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.05)'" onmouseout="if(!this.classList.contains('active-nav')){this.style.color='#94a3b8'; this.style.background='transparent';}">
+      👤 1. จัดการลูกค้า
+    </a>
+
+    <a routerLink="/orders" routerLinkActive="active-nav" style="color: #94a3b8; text-decoration: none; padding: 0.56rem 1.1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.05)'" onmouseout="if(!this.classList.contains('active-nav')){this.style.color='#94a3b8'; this.style.background='transparent';}">
+      📦 2. จัดการออเดอร์
+    </a>
+
+    <a routerLink="/route-optimization" routerLinkActive="active-nav" style="color: #94a3b8; text-decoration: none; padding: 0.56rem 1.1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.05)'" onmouseout="if(!this.classList.contains('active-nav')){this.style.color='#94a3b8'; this.style.background='transparent';}">
+      🗺️ 3. จัดเส้นทาง & กำไร
+    </a>
     
-    <a routerLink="/rider-task" style="color: white; text-decoration: none; padding: 0.5rem 1.2rem; background: #2563eb; border-radius: 6px; font-weight: bold;">📲 ฝั่งไรเดอร์</a>
+    <div style="width: 1px; height: 26px; background: #334155; margin: 0 0.8rem;"></div>
+    
+    <!-- Rider App Link -->
+    <a routerLink="/rider-task" routerLinkActive="active-rider" style="color: #38bdf8; text-decoration: none; padding: 0.56rem 1.2rem; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; font-size: 0.9rem; font-weight: 600; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(56, 189, 248, 0.2)'" onmouseout="if(!this.classList.contains('active-rider')){this.style.background='rgba(56, 189, 248, 0.1)';}">
+      📲 ฝั่งไรเดอร์
+    </a>
   </div>
 </nav>
 
-<main style="padding: 2rem; font-family: 'Segoe UI', sans-serif; max-width: 1200px; margin: 0 auto;">
+<main style="padding: 2rem 1.5rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1100px; margin: 0 auto;">
   <router-outlet></router-outlet>
 </main>

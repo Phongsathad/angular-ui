@@ -1,37 +1,36 @@
-<div>
+<div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h2>📦 2. จัดการออเดอร์ข้าวกล่องมื้อเที่ยง</h2>
-    <span style="background: #e0f2fe; color: #0369a1; padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">
-      ช่วงเวลาส่งบังคับ: 11:30 - 12:30 น.
+    <div>
+      <h2 style="margin: 0; font-size: 1.5rem; color: #0f172a;">📦 จัดการออเดอร์ข้าวกล่อง</h2>
+      <p style="margin: 0.2rem 0 0 0; color: #64748b; font-size: 0.9rem;">ออกออเดอร์มื้อเที่ยงโดยเลือกลูกค้าในระบบ</p>
+    </div>
+    <span style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 0.4rem 0.9rem; border-radius: 20px; font-weight: 600; font-size: 0.85rem;">
+      ⏰ บังคับเวลาจัดส่ง: 11:30 - 12:30 น.
     </span>
   </div>
 
-  <!-- ฟอร์มสร้างออเดอร์ โดยอิงจาก Customer -->
-  <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
-    <h3 style="margin-top:0; color: #1e293b;">+ เปิดออเดอร์ใหม่ (เลือกจากฐานข้อมูลลูกค้า)</h3>
+  <!-- Form -->
+  <div style="background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+    <h4 style="margin: 0 0 1rem 0; color: #334155;">+ เปิดคำสั่งซื้อใหม่</h4>
     <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem;">
-      
-      <!-- Dropdown เลือกลูกค้าที่มีอยู่ -->
       <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.3rem;">เลือกลูกค้า:</label>
-        <select [(ngModel)]="selectedCustomerId" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 4px; background: white;">
-          <option [ngValue]="null" disabled>-- เลือกลูกค้าในระบบ --</option>
+        <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem;">เลือกลูกค้า:</label>
+        <select [(ngModel)]="selectedCustomerId" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; font-size: 0.9rem;">
+          <option [ngValue]="null" disabled>-- เลือกรายชื่อลูกค้า --</option>
           <option *ngFor="let c of customers" [value]="c.id">
             {{ c.name }} ({{ c.address }} - {{ c.distanceKm }} กม.)
           </option>
         </select>
       </div>
 
-      <!-- จำนวนกล่อง -->
       <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.3rem;">จำนวนข้าวกล่อง:</label>
-        <input type="number" [(ngModel)]="newOrderQuantity" min="1" max="10" style="width: 90%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 4px;" />
+        <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem;">จำนวนกล่อง:</label>
+        <input type="number" [(ngModel)]="newOrderQuantity" min="1" max="10" style="width: 85%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;" />
       </div>
 
-      <!-- ช่วงเวลาส่ง -->
       <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.3rem;">รอบเวลาส่ง:</label>
-        <select [(ngModel)]="newOrderWindow" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 4px; background: white;">
+        <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem;">ช่วงเวลาจัดส่ง:</label>
+        <select [(ngModel)]="newOrderWindow" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; font-size: 0.9rem;">
           <option value="11:30 - 12:00">11:30 - 12:00 น.</option>
           <option value="12:00 - 12:30">12:00 - 12:30 น.</option>
           <option value="11:30 - 12:30">11:30 - 12:30 น.</option>
@@ -39,34 +38,34 @@
       </div>
     </div>
 
-    <button (click)="addOrder()" [disabled]="!selectedCustomerId" style="margin-top: 1.2rem; background: #2563eb; color: white; border: none; padding: 0.6rem 1.8rem; border-radius: 6px; font-weight: bold; cursor: pointer;">
-      + บันทึกเพิ่มออเดอร์
+    <button (click)="addOrder()" [disabled]="!selectedCustomerId" style="margin-top: 1.2rem; background: #2563eb; color: white; border: none; padding: 0.65rem 1.6rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+      + สร้างออเดอร์
     </button>
   </div>
 
-  <!-- ตารางออเดอร์ -->
-  <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+  <!-- Table -->
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
     <thead>
-      <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+      <tr style="background: #f1f5f9; color: #475569; text-align: left; border-bottom: 2px solid #e2e8f0;">
         <th style="padding: 0.8rem 1rem;">รหัสออเดอร์</th>
         <th style="padding: 0.8rem 1rem;">ชื่อลูกค้า</th>
         <th style="padding: 0.8rem 1rem;">สถานที่จัดส่ง</th>
         <th style="padding: 0.8rem 1rem;">จำนวน</th>
-        <th style="padding: 0.8rem 1rem;">ช่วงเวลาส่ง</th>
+        <th style="padding: 0.8rem 1rem;">รอบเวลาส่ง</th>
         <th style="padding: 0.8rem 1rem;">สถานะ</th>
-        <th style="padding: 0.8rem 1rem;">จัดการ</th>
+        <th style="padding: 0.8rem 1rem; text-align: center;">ยกเลิก</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let o of orders" style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 0.8rem 1rem; font-weight: bold; color: #2563eb;">#{{ o.id }}</td>
-        <td style="padding: 0.8rem 1rem; font-weight: bold;">{{ o.customerName }}</td>
+      <tr *ngFor="let o of orders" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+        <td style="padding: 0.8rem 1rem; font-weight: 700; color: #2563eb;">#{{ o.id }}</td>
+        <td style="padding: 0.8rem 1rem; font-weight: 600; color: #1e293b;">{{ o.customerName }}</td>
         <td style="padding: 0.8rem 1rem; color: #475569;">{{ o.address }}</td>
-        <td style="padding: 0.8rem 1rem; font-weight: bold;">{{ o.quantity }} กล่อง</td>
-        <td style="padding: 0.8rem 1rem;"><span style="background: #e0f2fe; color: #0369a1; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ o.deliveryWindow }}</span></td>
-        <td style="padding: 0.8rem 1rem;"><span style="background: #fef3c7; color: #b45309; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ o.status }}</span></td>
-        <td style="padding: 0.8rem 1rem;">
-          <button (click)="deleteOrder(o.id)" style="background: #ef4444; color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 4px; cursor: pointer;">ยกเลิก</button>
+        <td style="padding: 0.8rem 1rem; font-weight: 700; color: #0f172a;">{{ o.quantity }} กล่อง</td>
+        <td style="padding: 0.8rem 1rem;"><span style="background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">{{ o.deliveryWindow }}</span></td>
+        <td style="padding: 0.8rem 1rem;"><span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">{{ o.status }}</span></td>
+        <td style="padding: 0.8rem 1rem; text-align: center;">
+          <button (click)="deleteOrder(o.id)" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">ยกเลิก</button>
         </td>
       </tr>
     </tbody>

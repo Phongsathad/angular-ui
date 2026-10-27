@@ -1,3 +1,20 @@
-/* You can add global styles to this file, and also import other style files */
+/* Active Nav Button สำหรับ Owner */
+.active-nav {
+  color: #ffffff !important;
+  background-color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
 
-@import 'tailwindcss';
+/* Active Nav Button สำหรับ Rider */
+.active-rider {
+  color: #ffffff !important;
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+body {
+  margin: 0;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
