@@ -1,0 +1,39 @@
+<div style="max-width: 900px; margin: 0 auto;">
+  <h2>👤 3. จัดการข้อมูลลูกค้า</h2>
+
+  <!-- ฟอร์มเพิ่มลูกค้า -->
+  <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+    <h3 style="margin-top:0;">+ เพิ่มลูกค้าใหม่</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <input [(ngModel)]="newCustomer.name" placeholder="ชื่อลูกค้า" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
+      <input [(ngModel)]="newCustomer.phone" placeholder="เบอร์โทรศัพท์" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
+      <input [(ngModel)]="newCustomer.address" placeholder="ที่อยู่ / อาคาร" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
+      <input type="number" [(ngModel)]="newCustomer.distanceKm" placeholder="ระยะทางจากร้าน (กม.)" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <button (click)="addCustomer()" style="margin-top: 1rem; background: #16a34a; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer;">บันทึกเพิ่มลูกค้า</button>
+  </div>
+
+  <!-- ตารางแสดงรายการลูกค้า -->
+  <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <thead>
+      <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+        <th style="padding: 0.75rem;">ชื่อ</th>
+        <th style="padding: 0.75rem;">เบอร์โทร</th>
+        <th style="padding: 0.75rem;">ที่อยู่</th>
+        <th style="padding: 0.75rem;">ระยะทาง (กม.)</th>
+        <th style="padding: 0.75rem;">จัดการ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let c of customers" style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 0.75rem;">{{ c.name }}</td>
+        <td style="padding: 0.75rem;">{{ c.phone }}</td>
+        <td style="padding: 0.75rem;">{{ c.address }}</td>
+        <td style="padding: 0.75rem;">{{ c.distanceKm }} กม.</td>
+        <td style="padding: 0.75rem;">
+          <button (click)="deleteCustomer(c.id)" style="background: #ef4444; color: white; border: none; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer;">ลบ</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

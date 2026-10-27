@@ -1,0 +1,26 @@
+<div style="max-width: 600px; margin: 0 auto;">
+  <div style="background: #2563eb; color: white; padding: 1rem; border-radius: 8px 8px 0 0;">
+    <h2 style="margin: 0; font-size: 1.3rem;">📱 ฝั่งไรเดอร์: {{ riderName }}</h2>
+    <p style="margin: 0.3rem 0 0 0; font-size: 0.85rem; opacity: 0.9;">รอบการส่งวันนี้ (11:30 - 12:30 น.)</p>
+  </div>
+
+  <div style="border: 1px solid #cbd5e1; border-top: none; padding: 1rem; border-radius: 0 0 8px 8px; background: #f8fafc;">
+    <div *ngFor="let task of tasks" style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; margin-bottom: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+          <h4 style="margin: 0 0 0.3rem 0; font-size: 1.1rem;">#{{ task.id }} - {{ task.customerName }}</h4>
+          <div style="color: #475569; font-size: 0.9rem;">📍 {{ task.address }}</div>
+          <div style="color: #475569; font-size: 0.9rem;">📞 {{ task.phone }}</div>
+          <div style="margin-top: 0.5rem; font-weight: bold; color: #0284c7;">🍱 จำนวน: {{ task.quantity }} กล่อง</div>
+        </div>
+        <span style="background: #fef3c7; color: #92400e; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+          {{ task.deliveryWindow }}
+        </span>
+      </div>
+
+      <button (click)="toggleTaskStatus(task)" [style.background]="task.isCompleted ? '#16a34a' : '#64748b'" style="width: 100%; margin-top: 1rem; color: white; border: none; padding: 0.7rem; border-radius: 4px; font-weight: bold; cursor: pointer;">
+        {{ task.isCompleted ? '✓ จัดส่งสำเร็จแล้ว' : 'กดเมื่อจัดส่งสำเร็จ' }}
+      </button>
+    </div>
+  </div>
+</div>
