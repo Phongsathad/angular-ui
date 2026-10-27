@@ -21,8 +21,23 @@ interface OptimizationResult {
   styleUrl: './route-optimization.css'
 })
 export class RouteOptimization {
-  pricePerBox = 60; // ราคาข้าวกล่องละ 60 บาท
-  deliveryCostPerKm = 10; // ค่าจัดส่ง กม.ละ 10 บาท
+  // พิกัดร้านค้า (Store Location)
+  storeLat = 13.7456;
+  storeLng = 100.5342;
+
+  // สูตร Haversine คำนวณระยะทางระหว่าง 2 พิกัด (กม.)
+  calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // รัศมีโลก (กิโลเมตร)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const d = R * c; 
+    return parseFloat(d.toFixed(2)); // ปัดเศษ 2 ตำแหน่ง
+  }
 
   assignments: OptimizationResult[] = [
     {
@@ -30,22 +45,22 @@ export class RouteOptimization {
       riderName: 'ไรเดอร์ A (เอก)',
       totalBoxes: 7,
       totalOrders: 2,
-      totalDistance: 6.5,
+      totalDistance: 2.3, // คำนวณจาก Lat/Long ของออเดอร์ในคิว
       revenue: 420,
-      deliveryCost: 65,
-      profit: 355,
-      orders: ['#101 สมชาย (4 กล่อง - 2.5 กม.)', '#102 สมหญิง (3 กล่อง - 4.0 กม.)']
+      deliveryCost: 23,
+      profit: 397,
+      orders: ['#101 สมชาย (4 กล่อง - Lat: 13.7465, Lng: 100.5352)', '#102 สมหญิง (3 กล่อง - Lat: 13.7500, Lng: 100.5400)']
     },
     {
       riderId: 2,
       riderName: 'ไรเดอร์ B (บอย)',
       totalBoxes: 2,
       totalOrders: 1,
-      totalDistance: 1.8,
+      totalDistance: 0.5,
       revenue: 120,
-      deliveryCost: 18,
-      profit: 102,
-      orders: ['#103 กิตติศักดิ์ (2 กล่อง - 1.8 กม.)']
+      deliveryCost: 5,
+      profit: 115,
+      orders: ['#103 กิตติศักดิ์ (2 กล่อง - Lat: 13.7420, Lng: 100.5310)']
     }
   ];
 

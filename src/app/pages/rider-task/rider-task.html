@@ -1,57 +1,37 @@
 <div style="max-width: 650px; margin: 0 auto;">
-  
-  <!-- App Header Component Style -->
-  <div style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <span style="background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Rider Application</span>
-        <h2 style="margin: 0.4rem 0 0 0; font-size: 1.4rem;">📲 สวัสดีคุณ: {{ riderName }}</h2>
-      </div>
-      <div style="text-align: right;">
-        <span style="font-size: 0.8rem; opacity: 0.9;">รอบเวลาจัดส่ง</span>
-        <div style="font-weight: 700; font-size: 1rem; background: rgba(0,0,0,0.2); padding: 0.3rem 0.7rem; border-radius: 6px; margin-top: 0.2rem;">
-          11:30 - 12:30 น.
-        </div>
-      </div>
-    </div>
+  <div style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0;">
+    <h2 style="margin: 0; font-size: 1.4rem;">📲 สวัสดีคุณ: {{ riderName }}</h2>
+    <p style="margin: 0.3rem 0 0 0; font-size: 0.85rem; opacity: 0.9;">รอบเวลาจัดส่ง: 11:30 - 12:30 น.</p>
   </div>
 
-  <!-- Task Body Container -->
-  <div style="background: white; border: 1px solid #e2e8f0; border-top: none; padding: 1.5rem; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
-      <h3 style="margin: 0; font-size: 1.05rem; color: #334155;">📍 รายการจุดจัดส่งที่คุณต้องวิ่งส่ง ({{ tasks.length }} งาน)</h3>
-    </div>
-
-    <!-- Task Cards Loop -->
-    <div *ngFor="let task of tasks" style="border: 1px solid #cbd5e1; border-radius: 10px; padding: 1.2rem; margin-bottom: 1.2rem; background: #ffffff; transition: all 0.2s;" [style.border-left]="task.isCompleted ? '6px solid #16a34a' : '6px solid #f59e0b'">
+  <div style="background: white; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0 0 12px 12px;">
+    <div *ngFor="let task of tasks" style="border: 1px solid #cbd5e1; border-radius: 10px; padding: 1.2rem; margin-bottom: 1.2rem; background: #ffffff;">
       
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
-          <span style="font-weight: 800; color: #2563eb; font-size: 1.1rem; margin-right: 0.4rem;">#{{ task.id }}</span>
-          <span style="font-weight: 700; font-size: 1.1rem; color: #0f172a;">{{ task.customerName }}</span>
+          <span style="font-weight: 800; color: #2563eb; font-size: 1.1rem;">#{{ task.id }}</span>
+          <span style="font-weight: 700; font-size: 1.1rem; color: #0f172a; margin-left: 0.4rem;">{{ task.customerName }}</span>
         </div>
-        <span [style.background]="task.isCompleted ? '#dcfce7' : '#fffbebe3'" [style.color]="task.isCompleted ? '#15803d' : '#b45309'" style="padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.8rem; font-weight: 700;">
+        <span [style.background]="task.isCompleted ? '#dcfce7' : '#fffbeb'" [style.color]="task.isCompleted ? '#15803d' : '#b45309'" style="padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.8rem; font-weight: 700;">
           {{ task.isCompleted ? '✓ จัดส่งเรียบร้อย' : '⏳ รอนำส่ง' }}
         </span>
       </div>
 
-      <div style="background: #f8fafc; padding: 0.8rem; border-radius: 6px; border: 1px solid #f1f5f9; font-size: 0.9rem; margin-bottom: 1rem;">
-        <div style="color: #475569; margin-bottom: 0.3rem;">🏢 <strong>ที่อยู่:</strong> {{ task.address }}</div>
-        <div style="color: #475569; margin-bottom: 0.3rem;">📞 <strong>เบอร์ติดต่อ:</strong> <a href="tel:{{task.phone}}" style="color: #2563eb; text-decoration: none; font-weight: 600;">{{ task.phone }}</a></div>
-        <div style="color: #0369a1; font-weight: 700; margin-top: 0.4rem;">🍱 จำนวนข้าวกล่อง: {{ task.quantity }} กล่อง</div>
+      <div style="background: #f8fafc; padding: 0.8rem; border-radius: 6px; margin: 0.8rem 0; font-size: 0.9rem;">
+        <div>🏢 <strong>ที่อยู่:</strong> {{ task.address }}</div>
+        <div style="margin-top: 0.3rem;">📞 <strong>เบอร์ติดต่อ:</strong> {{ task.phone }}</div>
+        <div style="margin-top: 0.3rem; color: #0369a1; font-weight: 700;">🍱 จำนวน: {{ task.quantity }} กล่อง</div>
       </div>
 
-      <!-- Action Button -->
-      <button (click)="toggleTaskStatus(task)" 
-              [style.background]="task.isCompleted ? '#16a34a' : '#2563eb'" 
-              style="width: 100%; color: white; border: none; padding: 0.75rem; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-              onmouseover="this.style.opacity='0.9'" 
-              onmouseout="this.style.opacity='1'">
-        {{ task.isCompleted ? '✓ จัดส่งสำเร็จแล้ว (กดเพื่อเปลี่ยนสถานะกลับ)' : '📲 กดเมื่อจัดส่งถึงมือลูกค้าสำเร็จ' }}
+      <!-- ปุ่มกดนำทางด้วย Google Maps -->
+      <button (click)="openGoogleMaps(task.lat, task.lng)" style="width: 100%; margin-bottom: 0.6rem; background: #ea4335; color: white; border: none; padding: 0.6rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
+        🗺️ เปิด Google Maps นำทางไปบ้านลูกค้า
+      </button>
+
+      <button (click)="toggleTaskStatus(task)" [style.background]="task.isCompleted ? '#16a34a' : '#2563eb'" style="width: 100%; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
+        {{ task.isCompleted ? '✓ จัดส่งสำเร็จแล้ว' : 'กดเมื่อจัดส่งสำเร็จ' }}
       </button>
 
     </div>
-
   </div>
 </div>
