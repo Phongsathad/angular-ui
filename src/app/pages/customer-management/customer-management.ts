@@ -1,16 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-// Interface ปรับให้ตรงกับ Schema ใน Database เป๊ะๆ
-export interface Customer {
-  customer_id?: number;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  lat: number;
-  lng: number;
-}
+import { CustomerService, Customer } from '../../services/customer.service';
 
 @Component({
   selector: 'app-customer-management',
@@ -19,17 +10,13 @@ export interface Customer {
   templateUrl: './customer-management.html',
   styleUrl: './customer-management.css'
 })
-export class CustomerManagement {
-  // พิกัดเริ่มต้น (มมส.ใหม่)
+export class CustomerManagement implements OnInit {
+  private customerService = inject(CustomerService);
+
   storeLat = 16.2493037;
   storeLng = 103.2557389;
 
-  // รายชื่อลูกค้าทดสอบ
-  customers: Customer[] = [
-    { customer_id: 1, first_name: 'สมชาย', last_name: 'สายลุย', phone: '0812345678', lat: 16.2546296, lng: 103.2505615 },
-    { customer_id: 2, first_name: 'วิภา', last_name: 'รักดี', phone: '0898765432', lat: 16.2470296, lng: 103.2609615 },
-    { customer_id: 3, first_name: 'กิตติ', last_name: 'มั่งมี', phone: '0821112233', lat: 16.2376296, lng: 103.2469615 }
-  ];
+  customers: Customer[] = [];
 
   newCustomer: Customer = {
     first_name: '',
@@ -41,43 +28,56 @@ export class CustomerManagement {
 
   googleMapsUrlInput: string = '';
 
-  // สกัด Lat, Long จาก Google Maps URL
+  ngOnInit() {
+    this.loadCustomers();
+  }
+
+  // โหลดข้อมูลจาก MySQL ผ่าน API
+  loadCustomers() {
+    this.customerService.getCustomers().subscribe({
+      next: (data) => this.customers = data,
+      error: (err) => console.error('Error fetching customers:', err)
+    });
+  }
+
+  // ดึง Lat, Long จาก Google Maps URL
   extractLatLngFromUrl() {
     if (!this.googleMapsUrlInput) return;
-
     const match = this.googleMapsUrlInput.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (match && match[1] && match[2]) {
       this.newCustomer.lat = parseFloat(match[1]);
       this.newCustomer.lng = parseFloat(match[2]);
       alert(`ดึงพิกัดสำเร็จ!\nLat: ${this.newCustomer.lat}\nLng: ${this.newCustomer.lng}`);
     } else {
-      alert('ไม่พบพิกัดในลิงก์ กรุณาตรวจสอบว่ามี @lat,long ใน URL');
+      alert('ไม่พบพิกัดในลิงก์ Google Maps');
     }
   }
 
+  // ส่งข้อมูลไปบันทึกลง Database จริงผ่าน POST API
   addCustomer() {
     if (!this.newCustomer.first_name || !this.newCustomer.phone) {
       alert('กรุณากรอกชื่อและเบอร์โทรศัพท์');
       return;
     }
 
-    this.customers.push({
-      ...this.newCustomer,
-      customer_id: Date.now()
+    this.customerService.addCustomer(this.newCustomer).subscribe({
+      next: () => {
+        alert('บันทึกลูกค้าเรียบร้อยแล้ว!');
+        this.loadCustomers(); // โหลดข้อมูลใหม่จาก DB
+        this.newCustomer = { first_name: '', last_name: '', phone: '', lat: this.storeLat, lng: this.storeLng };
+        this.googleMapsUrlInput = '';
+      },
+      error: (err) => alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + err.message)
     });
-
-    // Reset Form
-    this.newCustomer = {
-      first_name: '',
-      last_name: '',
-      phone: '',
-      lat: this.storeLat,
-      lng: this.storeLng
-    };
-    this.googleMapsUrlInput = '';
   }
 
+  // ลบข้อมูลจริงผ่าน DELETE API
   deleteCustomer(id?: number) {
-    this.customers = this.customers.filter(c => c.customer_id !== id);
+    if (!id || !confirm('ยืนยันการลบลูกค้ารายนี้?')) return;
+    
+    this.customerService.deleteCustomer(id).subscribe({
+      next: () => this.loadCustomers(),
+      error: (err) => alert('เกิดข้อผิดพลาดในการลบข้อมูล')
+    });
   }
 }
