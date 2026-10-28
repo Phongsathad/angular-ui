@@ -10,7 +10,7 @@ import { CustomerService, Customer } from '../../services/customer.service';
   templateUrl: './customer-management.html',
   styleUrl: './customer-management.css'
 })
-export class CustomerManagement implements OnInit {
+export class CustomerManagementComponent implements OnInit {
   private customerService = inject(CustomerService);
 
   customers: Customer[] = [];
