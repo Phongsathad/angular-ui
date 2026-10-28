@@ -21,4 +21,8 @@ export class OrderManagement implements OnInit {
   addOrder() {}
   simulateOrders() {}
   deleteAllOrders() {}
+
+  deleteOrder(orderId: any) {
+    
+  }
 }
