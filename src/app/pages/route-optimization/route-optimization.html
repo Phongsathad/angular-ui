@@ -10,7 +10,6 @@
 
     <div #routeMap class="route-map" role="application" aria-label="แผนที่เส้นทางจัดส่ง"></div>
 
-    <!-- ปรับปรุง Legend ให้รองรับกรณีมีข้อมูลไรเดอร์ -->
     <div class="map-legend" *ngIf="assignments.length > 0">
       <span class="legend-dot"></span>
       <span>{{ assignments[0]?.riderName }} · {{ assignments[0]?.totalBoxes }} กล่อง <small *ngIf="assignments.length > 1">(และอีก {{ assignments.length - 1 }} คัน)</small></span>
@@ -26,7 +25,18 @@
       <span class="run-count">{{ assignments.length }}</span>
     </header>
 
-    <!-- วนลูปแสดงการ์ดงานของไรเดอร์แต่ละคนตามอัลกอริทึมการจัดสรร -->
+    <!-- ปุ่มบันทึกแผนการจัดส่งลงฐานข้อมูล -->
+    <div class="actions-container" style="margin-bottom: 16px;">
+      <button 
+        class="btn-save-route" 
+        (click)="saveRoutePlanToDatabase()" 
+        [disabled]="assignments.length === 0"
+        style="width: 100%; padding: 12px; background-color: #244b37; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <span>💾</span> บันทึกแผนการจัดส่งลงฐานข้อมูล
+      </button>
+    </div>
+
+    <!-- การ์ดแสดงผลงานของไรเดอร์แต่ละคน -->
     <article class="run-card" *ngFor="let assign of assignments">
       <div class="run-card__top">
         <span class="rider-status-dot"></span>

@@ -21,7 +21,6 @@ export class OrderManagement implements OnInit {
   // ---------- Form State Signals ----------
   selectedCustomerId = signal<number | null>(null);
   newOrderQuantity = signal<number>(1);
-  newOrderDeadline = signal<string>('12:30:00');
 
   // ---------- UI State Signals ----------
   isLoading = signal<boolean>(false);
@@ -70,26 +69,57 @@ export class OrderManagement implements OnInit {
     return customer ? `${customer.first_name} ${customer.last_name}` : `ลูกค้า ID #${customerId}`;
   }
 
+  // ---------- Helper แสดงสถานะ ----------
+  getStatusLabel(status?: string): string {
+    const s = status?.toLowerCase().trim();
+    switch (s) {
+      case 'completed':
+      case 'delivered':
+        return 'จัดส่งเสร็จแล้ว';
+      case 'cancelled':
+        return 'ยกเลิกออเดอร์';
+      case 'pending':
+      case 'assigned':
+      default:
+        return 'กำลังดำเนินการ';
+    }
+  }
+
+  getStatusClass(status?: string): string {
+    const s = status?.toLowerCase().trim();
+    switch (s) {
+      case 'completed':
+      case 'delivered':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'pending':
+      case 'assigned':
+      default:
+        return 'bg-amber-100 text-amber-800 border-amber-200';
+    }
+  }
+
+  // ---------- Action ----------
   addOrder() {
     const custId = this.selectedCustomerId();
     const qty = this.newOrderQuantity();
-    const deadline = this.newOrderDeadline();
 
     if (!custId) {
       this.showToast('กรุณาเลือกลูกค้า', 'error');
       return;
     }
 
-    if (qty < 1) {
-      this.showToast('จำนวนกล่องต้องอย่างน้อย 1 กล่อง', 'error');
+    if (qty < 1 || qty > 3) {
+      this.showToast('จำนวนกล่องต้องอยู่ระหว่าง 1 - 3 กล่อง', 'error');
       return;
     }
 
     const payload: Order = {
       customer_id: Number(custId),
       box_count: Number(qty),
-      deadline: deadline,
-      status: 'assigned',
+      deadline: '12:30:00', // ล็อกเป็น 12:30:00 ตามกฎร้าน
+      status: 'pending',
       app_created: 1
     };
 
@@ -127,7 +157,6 @@ export class OrderManagement implements OnInit {
   resetForm() {
     this.selectedCustomerId.set(null);
     this.newOrderQuantity.set(1);
-    this.newOrderDeadline.set('12:30:00');
   }
 
   showToast(message: string, type: 'success' | 'error') {

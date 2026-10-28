@@ -66,26 +66,24 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
   private readonly store = { latitude: 16.2470296, longitude: 103.2505615 };
   private routeStops: { latitude: number; longitude: number; name: string }[] = [];
   
-  routeStatus = 'กำลังโหลดและจัดสรรเส้นทาง...';
+  routeStatus = 'กำลังโหลดข้อมูลและจัดสรรเส้นทาง...';
 
   totalBoxes = 0;
   totalProfit = 0;
   assignments: OptimizationResult[] = [];
+  optimizedRiders: RiderRoute[] = [];
 
   ngOnInit(): void {
     this.fetchAndOptimizeRoutes();
   }
 
-  ngAfterViewInit(): void {
-    // แผนที่จะถูกเรียกหลังจากคำนวณเส้นทางและได้ข้อมูลจุดส่งเสร็จสิ้น
-  }
+  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     this.routeRequests.forEach(req => req.abort());
     this.map?.remove();
   }
 
-  // 1. ฟังก์ชันคำนวณระยะทาง (Haversine Formula) เป็นกิโลเมตร
   private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -98,23 +96,42 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
     return Number((R * c).toFixed(2));
   }
 
-  // 2. ดึงข้อมูลออเดอร์และลูกค้าจาก Backend แล้วนำมาคำนวณจัดกลุ่มความจุ + เรียงเส้นทาง
   private fetchAndOptimizeRoutes(): void {
     const customersUrl = 'https://project-adv-webx.vercel.app/api/customers';
     const ordersUrl = 'https://project-adv-webx.vercel.app/api/orders';
+    const ridersUrl = 'https://project-adv-webx.vercel.app/api/riders';
 
     forkJoin({
       customers: this.http.get<any[]>(customersUrl),
-      orders: this.http.get<any[]>(ordersUrl)
+      orders: this.http.get<any[]>(ordersUrl),
+      riders: this.http.get<any[]>(ridersUrl)
     }).subscribe({
-      next: ({ customers, orders }) => {
+      next: ({ customers, orders, riders }) => {
         if (!orders || orders.length === 0) {
           this.routeStatus = 'ไม่พบข้อมูลคำสั่งซื้อในระบบ';
           return;
         }
 
-        // แปลงข้อมูลและรวมร่างข้อมูลออเดอร์เข้ากับพิกัดลูกค้า
-        let rawOrders = orders.map((order) => {
+        // 1. กรองเอาเฉพาะออเดอร์ที่ยังไม่เสร็จสิ้น (ตัด status === 'completed' ออก)
+        const pendingOrders = orders.filter(order => 
+          order.status !== 'completed' && order.status !== 'Completed'
+        );
+
+        if (pendingOrders.length === 0) {
+          this.routeStatus = 'ไม่มีออเดอร์ค้างส่งในระบบ (จัดส่งครบหมดแล้ว)';
+          this.assignments = [];
+          this.routeStops = [];
+          return;
+        }
+
+        const activeRiders = riders.filter(r => r.is_active === 1 || r.is_active === true);
+        if (activeRiders.length === 0) {
+          this.routeStatus = 'ไม่พบไรเดอร์ที่พร้อมปฏิบัติงานในระบบ';
+          return;
+        }
+
+        // 2. แปลงข้อมูลออเดอร์ที่ยังไม่ส่ง จับคู่กับพิกัดลูกค้า
+        let rawOrders = pendingOrders.map((order) => {
           const customer = customers.find(c => c.customer_id === order.customer_id);
           return {
             order_id: order.order_id,
@@ -126,19 +143,17 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
           };
         });
 
-        // ลุยอัลกอริทึม: แบ่งกลุ่มตามความจุ (Max 10 กล่อง/คัน) และจัดเรียง Nearest Neighbor
         const MAX_CAPACITY = 10;
-        const riderNames = ['สมศักดิ์ รุ่งไว', 'มานะ ใจสู้', 'วิชัย พาซิ่ง'];
-        const optimizedRiders: RiderRoute[] = [];
+        this.optimizedRiders = [];
         
         let unassignedOrders = [...rawOrders];
         let riderIndex = 0;
 
-        while (unassignedOrders.length > 0) {
+        while (unassignedOrders.length > 0 && riderIndex < activeRiders.length) {
+          const currentRider = activeRiders[riderIndex];
           let currentBatch: typeof rawOrders = [];
           let currentBoxes = 0;
 
-          // กรองออเดอร์ใส่กระเป๋าไม่ให้เกิน 10 กล่องต่อคัน
           unassignedOrders = unassignedOrders.filter(order => {
             if (currentBoxes + order.box_count <= MAX_CAPACITY) {
               currentBatch.push(order);
@@ -148,7 +163,6 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
             return true;
           });
 
-          // จัดเรียงจุดส่งด้วย Nearest Neighbor (เริ่มจากร้าน)
           let sortedStops: DeliveryStop[] = [];
           let currentLat = this.store.latitude;
           let currentLng = this.store.longitude;
@@ -180,9 +194,9 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
             currentLng = nextOrder.lng;
           }
 
-          optimizedRiders.push({
-            riderId: riderIndex + 1,
-            riderName: riderNames[riderIndex % riderNames.length],
+          this.optimizedRiders.push({
+            riderId: currentRider.rider_id,
+            riderName: currentRider.name,
             totalBoxes: currentBoxes,
             totalOrders: sortedStops.length,
             stops: sortedStops,
@@ -193,33 +207,63 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
           riderIndex++;
         }
 
-        // เก็บพิกัดจุดส่งทั้งหมดไว้สำหรับปักหมุดบนแผนที่
         this.routeStops = rawOrders.map(o => ({ latitude: o.lat, longitude: o.lng, name: o.first_name }));
         this.totalBoxes = rawOrders.reduce((sum, o) => sum + o.box_count, 0);
 
-        // แปลงผลลัพธ์เป็น Assignments สำหรับแสดงผลในตาราง
-        this.assignments = optimizedRiders.map(rider => ({
+        this.assignments = this.optimizedRiders.map(rider => ({
           riderId: rider.riderId,
           riderName: rider.riderName,
           totalBoxes: rider.totalBoxes,
           totalOrders: rider.totalOrders,
           totalDistance: 0,
-          revenue: rider.totalOrders * 50, // ตัวอย่างคำนวณรายรับ
+          revenue: rider.totalOrders * 50,
           deliveryCost: 15,
           profit: (rider.totalOrders * 50) - 15,
           duration: 0,
           orders: rider.stops.map(s => `${s.customerName} (${s.boxCount} กล่อง)`)
         }));
 
-        this.routeStatus = `จัดสรรงานสำเร็จ (${optimizedRiders.length} คัน)`;
+        this.routeStatus = `จัดสรรงานสำเร็จ (${this.optimizedRiders.length} คัน)`;
 
         setTimeout(() => {
           this.initializeMap();
         }, 100);
       },
       error: (err) => {
-        console.error('ไม่สามารถโหลดข้อมูลคำสั่งซื้อหรือลูกค้าได้', err);
+        console.error('ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้', err);
         this.routeStatus = 'โหลดข้อมูลไม่สำเร็จ';
+      }
+    });
+  }
+
+  saveRoutePlanToDatabase(): void {
+    if (this.assignments.length === 0) {
+      alert('ไม่มีข้อมูลเส้นทางที่จะบันทึก');
+      return;
+    }
+
+    const payload = {
+      plan_date: new Date().toISOString().split('T')[0],
+      depart_time: '11:30:00',
+      assignments: this.optimizedRiders.map((rider, index) => ({
+        riderId: rider.riderId,
+        color: index === 0 ? '#ef5148' : index === 1 ? '#3b82f6' : '#10b981',
+        stops: rider.stops.map(stop => ({
+          orderId: stop.orderId
+        }))
+      }))
+    };
+
+    const saveUrl = 'https://project-adv-webx.vercel.app/api/route-plans';
+
+    this.http.post(saveUrl, payload).subscribe({
+      next: (response: any) => {
+        alert('บันทึกแผนเส้นทางและกระจายงานให้ไรเดอร์สำเร็จ!');
+        console.log('Saved successfully:', response);
+      },
+      error: (err) => {
+        console.error('ไม่สามารถบันทึกข้อมูลลงฐานข้อมูลได้', err);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       }
     });
   }
@@ -227,6 +271,10 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
   private initializeMap(): void {
     const element = this.routeMapElement()?.nativeElement;
     if (!element) return;
+
+    if (this.map) {
+      this.map.remove();
+    }
 
     const map = L.map(element, { scrollWheelZoom: false });
     this.map = map;
@@ -242,7 +290,6 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
       [this.store.latitude, this.store.longitude] as L.LatLngExpression,
     ];
 
-    // ปักหมุดลูกค้าแต่ละคน
     this.routeStops.forEach((stop, index) => {
       L.marker([stop.latitude, stop.longitude], {
         icon: L.divIcon({
@@ -254,7 +301,6 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
       }).addTo(map).bindTooltip(stop.name);
     });
 
-    // ปักหมุดร้านค้า
     L.marker([this.store.latitude, this.store.longitude], {
       icon: L.divIcon({
         className: '',
@@ -264,7 +310,9 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
       }),
     }).addTo(map).bindTooltip('จุดเริ่มต้น');
 
-    map.fitBounds(L.latLngBounds(stops), { padding: [40, 40] });
+    if (stops.length > 1) {
+      map.fitBounds(L.latLngBounds(stops), { padding: [40, 40] });
+    }
     void this.loadRoadRoute(map);
   }
 
