@@ -11,21 +11,8 @@
     <div #routeMap class="route-map" role="application" aria-label="แผนที่เส้นทางจัดส่ง"></div>
 
     <div class="map-legend" *ngIf="assignments.length > 0">
-      <button
-        class="legend-item"
-        type="button"
-        *ngFor="let assign of assignments"
-        [class.is-selected]="selectedRiderId === assign.riderId"
-        [attr.aria-pressed]="selectedRiderId === assign.riderId"
-        (click)="toggleRiderRoute(assign.riderId)">
-        <span class="legend-dot" [style.background-color]="assign.color"></span>
-        <span>{{ assign.riderName }} · {{ assign.totalBoxes }} กล่อง</span>
-      </button>
-      <button
-        *ngIf="selectedRiderId !== null"
-        class="legend-reset"
-        type="button"
-        (click)="toggleRiderRoute(selectedRiderId)">แสดงทุกเส้น</button>
+      <span class="legend-dot"></span>
+      <span>{{ assignments[0]?.riderName }} · {{ assignments[0]?.totalBoxes }} กล่อง</span>
     </div>
   </section>
 
@@ -38,18 +25,7 @@
       <span class="run-count">{{ assignments.length }}</span>
     </header>
 
-    <!-- ปุ่มบันทึกแผนการจัดส่งลงฐานข้อมูล -->
-    <div class="actions-container" style="margin-bottom: 16px;">
-      <button 
-        class="btn-save-route" 
-        (click)="saveRoutePlanToDatabase()" 
-        [disabled]="assignments.length === 0"
-        style="width: 100%; padding: 12px; background-color: #244b37; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <span>💾</span> บันทึกแผนการจัดส่งลงฐานข้อมูล
-      </button>
-    </div>
-
-    <!-- การ์ดแสดงผลงานของไรเดอร์แต่ละคน พร้อมแถบสีประจำตัว -->
+    <!-- การ์ดแสดงผลงานของไรเดอร์แต่ละคน -->
     <article class="run-card" *ngFor="let assign of assignments" [style.border-left]="'6px solid ' + assign.color">
       <div class="run-card__top">
         <span class="rider-status-dot" [style.background-color]="assign.color"></span>
@@ -74,7 +50,15 @@
       </ol>
     </article>
 
-    
-    <router-outlet />
+    <!-- ลบหรือย้าย router-outlet ออกหากทำให้หน้าจอทับซ้อนกัน -->
+    <!-- <router-outlet></router-outlet> -->
+
+    <a class="rider-link" routerLink="/rider-task">
+      <span class="rider-link__icon" aria-hidden="true">♙</span>
+      <span class="rider-link__copy">
+        <strong>แสดงไรเดอร์</strong>
+      </span>
+      <span class="rider-link__arrow" aria-hidden="true">→</span>
+    </a>
   </aside>
 </main>

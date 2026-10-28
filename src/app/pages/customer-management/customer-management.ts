@@ -24,6 +24,7 @@ export class CustomerManagement implements OnInit {
   newLat = signal<number | null>(null);
   newLng = signal<number | null>(null);
   newMapsUrl = signal<string>(''); // สำหรับวางลิงก์ Google Maps
+  newAddressNote = signal<string>('');
 
   // ---------- Modal แก้ไขลูกค้า Signals ----------
   isEditMode = signal<boolean>(false);
@@ -120,7 +121,8 @@ export class CustomerManagement implements OnInit {
       last_name: this.newLastName(),
       phone: this.newPhone(),
       lat: this.newLat() ?? 0,
-      lng: this.newLng() ?? 0
+      lng: this.newLng() ?? 0,
+      address_note: this.newAddressNote()
     };
 
     this.isSaving.set(true);
@@ -146,6 +148,7 @@ export class CustomerManagement implements OnInit {
     this.newLat.set(null);
     this.newLng.set(null);
     this.newMapsUrl.set('');
+    this.newAddressNote.set('');
   }
 
   // เปิด Modal แก้ไขลูกค้า

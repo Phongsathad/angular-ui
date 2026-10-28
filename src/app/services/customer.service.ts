@@ -9,6 +9,7 @@ export interface Customer {
   phone: string;
   lat?: number;
   lng?: number;
+  address_note?: string;
 }
 
 @Injectable({

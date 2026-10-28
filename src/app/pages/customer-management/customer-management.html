@@ -12,7 +12,8 @@
     <header class="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold">จัดการข้อมูลลูกค้า</h1>
-        <p class="mt-1 text-sm text-slate-500">จัดการรายชื่อลูกค้า พิกัดจัดส่ง และเบอร์โทรศัพท์ (ลูกค้าทั้งหมด {{ customers().length }} ราย)</p>
+        <p class="mt-1 text-sm text-slate-500">จัดการรายชื่อลูกค้า พิกัดจัดส่ง และเบอร์โทรศัพท์ (ลูกค้าทั้งหมด {{
+          customers().length }} ราย)</p>
       </div>
     </header>
 
@@ -32,26 +33,37 @@
 
           <div>
             <label class="mb-1 block text-xs font-medium text-slate-600">นามสกุล</label>
-            <input type="text" [ngModel]="newLastName()" (ngModelChange)="newLastName.set($event)" placeholder="เช่น ใจดี"
+            <input type="text" [ngModel]="newLastName()" (ngModelChange)="newLastName.set($event)"
+              placeholder="เช่น ใจดี"
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
           </div>
 
           <div>
             <label class="mb-1 block text-xs font-medium text-slate-600">เบอร์โทรศัพท์ *</label>
-            <input type="text" [ngModel]="newPhone()" (ngModelChange)="newPhone.set($event)" placeholder="เช่น 0812345678"
+            <input type="text" [ngModel]="newPhone()" (ngModelChange)="newPhone.set($event)"
+              placeholder="เช่น 0812345678"
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
           </div>
         </div>
 
         <!-- บรรทัดที่ 2: วางลิงก์ Google Maps -->
         <div>
-          <label class="mb-1 block text-xs font-semibold text-blue-600">📍 วางลิงก์ Google Maps (เพื่อดึง Lat, Lng อัตโนมัติ)</label>
+          <label class="mb-1 block text-xs font-semibold text-blue-600">📍 วางลิงก์ Google Maps (เพื่อดึง Lat, Lng
+            อัตโนมัติ)</label>
           <input type="text" [ngModel]="newMapsUrl()" (ngModelChange)="onAddMapsUrlChange($event)"
             placeholder="เช่น https://www.google.com/maps?q=16.1944,103.2536"
             class="w-full rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2 text-sm text-blue-900 placeholder-blue-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" />
         </div>
 
-        <!-- บรรทัดที่ 3: Latitude, Longitude -->
+        <!-- บรรทัดที่ 3: รายละเอียดที่อยู่ / หมายเหตุ -->
+        <div>
+          <label class="mb-1 block text-xs font-medium text-slate-600">รายละเอียดที่อยู่ / หมายเหตุ</label>
+          <input type="text" [ngModel]="newAddressNote()" (ngModelChange)="newAddressNote.set($event)"
+            placeholder="เช่น หมู่บ้านสุขใจ บ้านเลขที่ 12/34"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+        </div>
+
+        <!-- บรรทัดที่ 4: Latitude, Longitude -->
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label class="mb-1 block text-xs font-medium text-slate-600">Latitude (ละติจูด)</label>
@@ -100,6 +112,7 @@
                 <th class="px-3 py-2">รหัส</th>
                 <th class="px-3 py-2">ชื่อ - นามสกุล</th>
                 <th class="px-3 py-2">เบอร์โทรศัพท์</th>
+                <th class="px-3 py-2">รายละเอียดที่อยู่</th>
                 <th class="px-3 py-2">พิกัด (Lat, Lng)</th>
                 <th class="px-3 py-2 text-right">จัดการ</th>
               </tr>
@@ -112,6 +125,9 @@
                 </td>
                 <td class="px-3 py-3 text-slate-600">
                   {{ c.phone || '-' }}
+                </td>
+                <td class="px-3 py-3 text-slate-600">
+                  {{ c.address_note || '-' }} <!-- 👈 แสดงรายละเอียดที่อยู่ -->
                 </td>
 
                 <!-- คอลัมน์พิกัด เป็นลิงก์กดเปิด Google Maps แท็บใหม่ -->
@@ -172,9 +188,16 @@
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
           </div>
 
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-600">รายละเอียดที่อยู่ / หมายเหตุ</label>
+            <input type="text" [(ngModel)]="cust.address_note"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+          
           <!-- วางลิงก์ Google Maps ใน Modal แก้ไข -->
           <div>
-            <label class="mb-1 block text-xs font-semibold text-blue-600">📍 วางลิงก์ Google Maps เพื่ออัปเดตพิกัด</label>
+            <label class="mb-1 block text-xs font-semibold text-blue-600">📍 วางลิงก์ Google Maps
+              เพื่ออัปเดตพิกัด</label>
             <input type="text" [ngModel]="editMapsUrl()" (ngModelChange)="onEditMapsUrlChange($event)"
               placeholder="วางลิงก์ที่นี่เพื่ออัปเดตพิกัดอัตโนมัติ"
               class="w-full rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2 text-sm text-blue-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" />
