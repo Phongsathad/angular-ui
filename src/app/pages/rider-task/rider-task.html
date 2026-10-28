@@ -41,11 +41,22 @@
 
     <!-- รายการจุดส่งสินค้า -->
     <div class="task-list-section">
-      <h3>รายการจุดส่งสินค้า ({{ tasks.length }} จุด)</h3>
-      <div *ngIf="tasks.length === 0" class="no-tasks">ไม่มีออเดอร์ที่ต้องจัดส่งในขณะนี้</div>
+      <div class="task-list-header">
+        <h3>รายการจุดส่งสินค้า ({{ tasks.length }} จุด)</h3>
+        <button type="button" class="btn-retry" (click)="retryFetchTasks()" [disabled]="isLoadingTasks">
+          {{ isLoadingTasks ? 'กำลังโหลด...' : 'รีเฟรช' }}
+        </button>
+      </div>
+      <div *ngIf="isLoadingTasks" class="no-tasks" role="status">กำลังโหลดรายการจุดส่งสินค้า...</div>
+      <div *ngIf="taskLoadError" class="task-load-error" role="alert">
+        {{ taskLoadError }}
+      </div>
+      <div *ngIf="!isLoadingTasks && !taskLoadError && tasks.length === 0" class="no-tasks">
+        ไม่มีออเดอร์ที่ต้องจัดส่งในขณะนี้
+      </div>
       
       <div class="task-card" *ngFor="let task of tasks; let i = index">
-        <span class="task-index">{{ task.stop_seq || (i + 1) }}</span>
+        <span class="task-index" [style.background-color]="task.color || '#0077b6'">{{ task.stop_seq || (i + 1) }}</span>
         <div class="task-info">
           <h4>{{ task.first_name }} {{ task.last_name || '' }}</h4>
           <p>📞 โทร: {{ task.phone || 'ไม่ระบุ' }}</p>

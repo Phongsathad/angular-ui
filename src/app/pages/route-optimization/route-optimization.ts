@@ -405,34 +405,38 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  saveRoutePlanToDatabase(): void {
-    if (this.assignments.length === 0) {
-      alert('ไม่มีข้อมูลเส้นทางที่จะบันทึก');
+  isSaving = false;
+
+  saveRoutesToDatabase(): void {
+    if (this.optimizedRiders.length === 0) {
+      this.routeStatus = 'ไม่มีเส้นทางให้บันทึก';
       return;
     }
 
     const payload = {
       plan_date: new Date().toISOString().split('T')[0],
-      depart_time: '11:30:00',
+      depart_time: new Date().toTimeString().slice(0, 8),
       assignments: this.optimizedRiders.map(rider => ({
         riderId: rider.riderId,
         color: rider.color,
-        stops: rider.stops.map(stop => ({
-          orderId: stop.orderId
-        }))
-      }))
+        stops: rider.stops.map(stop => ({ orderId: stop.orderId })),
+      })),
     };
 
-    const saveUrl = 'https://project-adv-webx.vercel.app/api/route-plans';
-
-    this.http.post(saveUrl, payload).subscribe({
-      next: (response: any) => {
-        alert('บันทึกแผนเส้นทางและกระจายงานให้ไรเดอร์สำเร็จ!');
-        console.log('Saved successfully:', response);
+    this.isSaving = true;
+    this.http.post('https://project-adv-webx.vercel.app/api/route-plans', payload).pipe(
+      finalize(() => {
+        this.isSaving = false;
+      })
+    ).subscribe({
+      next: () => {
+        this.routeStatus = 'บันทึกแผนเส้นทางสำเร็จ';
+        alert('บันทึกเส้นทางและกระจายงานสำเร็จ!');
       },
       error: (err) => {
-        console.error('ไม่สามารถบันทึกข้อมูลลงฐานข้อมูลได้', err);
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        this.routeStatus = 'บันทึกเส้นทางไม่สำเร็จ';
+        console.error('เกิดข้อผิดพลาดในการบันทึกเส้นทาง:', err);
+        alert('บันทึกไม่สำเร็จ: ' + (err.error?.error || 'กรุณาลองใหม่อีกครั้ง'));
       }
     });
   }
