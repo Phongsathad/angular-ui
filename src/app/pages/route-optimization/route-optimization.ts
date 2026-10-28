@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, viewChild } from '@angular/core';
+import { ChangeDetectorRef, AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -92,6 +92,8 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
   '#ff006e', '#fb8500', '#8338ec', '#023e8a', '#0096c7', // 21-25
   '#52b788', '#d90429', '#ef233c', '#8d99ae', '#2b2d42'  // 26-30
 ];
+
+private cdr = inject(ChangeDetectorRef); // 👈 เพิ่มตัวแปรสำหรับบังคับอัปเดต UI
 
   ngOnInit(): void {
     const savedRiderId = localStorage.getItem(this.selectedRiderStorageKey);
@@ -237,20 +239,22 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
 
         this.totalBoxes = rawOrders.reduce((sum, o) => sum + o.box_count, 0);
 
-        // แปลงข้อมูลเป็น assignments สำหรับแสดงผลใน UI
-        this.assignments = this.optimizedRiders.map(rider => ({
-          riderId: rider.riderId,
-          riderName: rider.riderName,
-          color: rider.color,
-          totalBoxes: rider.totalBoxes,
-          totalOrders: rider.totalOrders,
-          totalDistance: 0,
-          revenue: rider.totalOrders * 50,
-          deliveryCost: 15,
-          profit: (rider.totalOrders * 50) - 15,
-          duration: 0,
-          orders: rider.stops.map(s => `${s.customerName} (${s.boxCount} กล่อง)`)
-        }));
+        // ใน fetchAndOptimizeRoutes() และ loadSavedRoutes() หลังจากกำหนดค่า assignments เสร็จแล้ว:
+this.assignments = this.optimizedRiders.map(rider => ({
+  riderId: rider.riderId,
+  riderName: rider.riderName,
+  color: rider.color,
+  totalBoxes: rider.totalBoxes,
+  totalOrders: rider.totalOrders,
+  totalDistance: 0,
+  revenue: rider.totalOrders * 50,
+  deliveryCost: 15,
+  profit: (rider.totalOrders * 50) - 15,
+  duration: 0,
+  orders: rider.stops.map(s => `${s.customerName} (${s.boxCount} กล่อง)`)
+}));
+
+this.cdr.detectChanges(); // 👈 บังคับให้ Angular อัปเดตหน้าจอฝั่งขวาทันทีโดยไม่ต้องรอคลิกปุ่ม
 
         this.routeStatus = `จัดสรรงานสำเร็จ (${this.optimizedRiders.length} คัน)`;
 
