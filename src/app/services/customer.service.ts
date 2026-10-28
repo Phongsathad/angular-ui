@@ -26,6 +26,11 @@ export class CustomerService {
     return this.http.post<any>(this.apiUrl, customer);
   }
 
+  // ใหม่: แก้ไขข้อมูลลูกค้า (ต้องมี route PUT /api/customers/:id ที่ backend)
+  updateCustomer(id: number, customer: Customer): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}`, customer);
+  }
+
   deleteCustomer(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }

@@ -1,64 +1,221 @@
-<div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-  
-  <h2 style="margin-top: 0; color: #0f172a;">👥 จัดการข้อมูลลูกค้า (Customers)</h2>
+<div class="min-h-screen bg-slate-100 text-slate-900">
+  <div class="mx-auto max-w-6xl px-4 pb-12 pt-6">
 
-  <!-- ฟอร์มเพิ่มลูกค้า -->
-  <form (ngSubmit)="onSubmit()" style="background: #f8fafc; padding: 1.25rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
-    <h4 style="margin: 0 0 1rem 0; color: #334155;">+ เพิ่มข้อมูลลูกค้าใหม่</h4>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
-      <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">ชื่อ:</label>
-        <input type="text" [(ngModel)]="newCustomer.first_name" name="first_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
-      </div>
-
-      <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">นามสกุล:</label>
-        <input type="text" [(ngModel)]="newCustomer.last_name" name="last_name" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
-      </div>
-
-      <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">เบอร์โทรศัพท์:</label>
-        <input type="text" [(ngModel)]="newCustomer.phone" name="phone" required style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
-      </div>
-
-      <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">Lat:</label>
-        <input type="number" step="any" [(ngModel)]="newCustomer.lat" name="lat" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
-      </div>
-
-      <div>
-        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">Lng:</label>
-        <input type="number" step="any" [(ngModel)]="newCustomer.lng" name="lng" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
-      </div>
+    <!-- Toast -->
+    <div
+      *ngIf="toastMessage()"
+      class="fixed right-5 top-5 z-50 max-w-sm rounded-xl px-4 py-3 text-sm text-white shadow-lg"
+      [class.bg-green-600]="toastType() === 'success'"
+      [class.bg-red-600]="toastType() === 'error'">
+      {{ toastMessage() }}
     </div>
 
-    <button type="submit" style="margin-top: 1rem; background: #16a34a; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
-      บันทึกข้อมูลลูกค้า
-    </button>
-  </form>
+    <!-- Header -->
+    <header class="mb-5">
+      <h1 class="text-2xl font-bold">จัดการลูกค้า</h1>
+      <p class="mt-1 text-sm text-slate-500">ลูกค้าทั้งหมด {{ customers().length }} ราย</p>
+    </header>
 
-  <!-- ตารางแสดงข้อมูลลูกค้า -->
-  <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-    <thead>
-      <tr style="background: #f1f5f9; color: #475569; text-align: left;">
-        <th style="padding: 0.75rem;">ID</th>
-        <th style="padding: 0.75rem;">ชื่อ - นามสกุล</th>
-        <th style="padding: 0.75rem;">เบอร์โทรศัพท์</th>
-        <th style="padding: 0.75rem;">พิกัด (Lat, Lng)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let c of customers" style="border-bottom: 1px solid #f1f5f9;">
-        <td style="padding: 0.75rem; font-weight: 600;">#{{ c.customer_id }}</td>
-        <td style="padding: 0.75rem;">{{ c.first_name }} {{ c.last_name }}</td>
-        <td style="padding: 0.75rem;">{{ c.phone }}</td>
-        <td style="padding: 0.75rem; color: #64748b;">{{ c.lat }}, {{ c.lng }}</td>
-      </tr>
-      <tr *ngIf="customers.length === 0">
-        <td colspan="4" style="text-align: center; padding: 2rem; color: #94a3b8;">ไม่พบข้อมูลลูกค้า</td>
-      </tr>
-    </tbody>
-  </table>
+    <div class="grid items-start gap-5 lg:grid-cols-[380px_1fr]">
 
+      <!-- ===== ฟอร์ม เพิ่ม / แก้ไข ===== -->
+      <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-4">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold">
+            {{ isEditMode ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่' }}
+          </h2>
+          <span
+            *ngIf="isEditMode"
+            class="rounded-full bg-amber-100 px-3 py-1 text-xs text-amber-800">โหมดแก้ไข</span>
+        </div>
+
+        <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <div>
+            <label for="firstName" class="mb-1 block text-sm font-medium text-slate-600">ชื่อ *</label>
+            <input
+              id="firstName" type="text"
+              [(ngModel)]="currentCustomer().first_name"
+              placeholder="เช่น สมชาย"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+          <div>
+            <label for="lastName" class="mb-1 block text-sm font-medium text-slate-600">นามสกุล *</label>
+            <input
+              id="lastName" type="text"
+              [(ngModel)]="currentCustomer().last_name"
+              placeholder="เช่น ใจดี"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="phone" class="mb-1 block text-sm font-medium text-slate-600">เบอร์โทร</label>
+          <input
+            id="phone" type="tel" maxlength="10"
+            [(ngModel)]="currentCustomer().phone"
+            placeholder="0812345678"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+        </div>
+
+        <div class="mb-3">
+          <label for="mapsUrl" class="mb-1 block text-sm font-medium text-slate-600">
+            วางลิงก์ Google Maps เพื่อดึงพิกัด
+          </label>
+          <div class="flex gap-2">
+            <input
+              id="mapsUrl" type="text"
+              [(ngModel)]="googleMapsUrl"
+              placeholder="https://www.google.com/maps/..."
+              class="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+            <button
+              type="button" (click)="extractLatLngFromUrl()"
+              class="whitespace-nowrap rounded-lg bg-indigo-100 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-200">
+              ดึงพิกัด
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3 grid grid-cols-2 gap-3">
+          <div>
+            <label for="lat" class="mb-1 block text-sm font-medium text-slate-600">Latitude</label>
+            <input
+              id="lat" type="number" step="any"
+              [(ngModel)]="currentCustomer().lat"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+          <div>
+            <label for="lng" class="mb-1 block text-sm font-medium text-slate-600">Longitude</label>
+            <input
+              id="lng" type="number" step="any"
+              [(ngModel)]="currentCustomer().lng"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+        </div>
+
+        <a
+          *ngIf="hasCoordinates"
+          [href]="mapsLink(currentCustomer().lat, currentCustomer().lng)"
+          target="_blank" rel="noopener"
+          class="mb-3 inline-block text-sm text-blue-600 hover:underline">
+          เปิดตำแหน่งนี้ใน Google Maps
+        </a>
+
+        <p
+          *ngIf="formError()"
+          class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {{ formError() }}
+        </p>
+
+        <div class="mt-2 flex gap-2">
+          <button
+            type="button" [disabled]="isSaving()" (click)="saveCustomer()"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
+            {{ isSaving() ? 'กำลังบันทึก...' : (isEditMode ? 'บันทึกการแก้ไข' : 'เพิ่มลูกค้า') }}
+          </button>
+          <button
+            type="button" (click)="resetForm()"
+            class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+            {{ isEditMode ? 'ยกเลิก' : 'ล้างฟอร์ม' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== รายชื่อลูกค้า ===== -->
+      <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold">รายชื่อลูกค้า</h2>
+          <input
+            type="search" [(ngModel)]="searchText"
+            placeholder="ค้นหาชื่อ หรือเบอร์โทร..."
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:w-64" />
+        </div>
+
+        <!-- กำลังโหลด -->
+        <p *ngIf="isLoading()" class="py-10 text-center text-slate-500">
+          กำลังโหลดข้อมูล...
+        </p>
+
+        <!-- โหลดเสร็จแต่ไม่มีข้อมูล -->
+        <p
+          *ngIf="!isLoading() && filteredCustomers.length === 0"
+          class="py-10 text-center text-slate-500">
+          {{ searchText ? 'ไม่พบลูกค้าที่ตรงกับคำค้นหา' : 'ยังไม่มีข้อมูลลูกค้า' }}
+        </p>
+
+        <!-- โหลดเสร็จและมีข้อมูล -->
+        <div *ngIf="!isLoading() && filteredCustomers.length > 0" class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b-2 border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                <th class="px-3 py-2">ชื่อ - นามสกุล</th>
+                <th class="px-3 py-2">เบอร์โทร</th>
+                <th class="px-3 py-2">พิกัด</th>
+                <th class="px-3 py-2 text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let c of filteredCustomers"
+                class="border-b border-slate-100 text-sm hover:bg-slate-50"
+                [class.bg-amber-50]="c.customer_id === editingId()">
+                <td class="px-3 py-3">{{ c.first_name }} {{ c.last_name }}</td>
+                <td class="px-3 py-3">{{ c.phone || '-' }}</td>
+                <td class="px-3 py-3">
+                  <a
+                    *ngIf="hasLocation(c)"
+                    [href]="mapsLink(c.lat, c.lng)"
+                    target="_blank" rel="noopener"
+                    class="whitespace-nowrap text-blue-600 hover:underline">
+                    {{ c.lat | number:'1.4-6' }}, {{ c.lng | number:'1.4-6' }}
+                  </a>
+                  <span *ngIf="!hasLocation(c)" class="text-slate-400">ยังไม่ระบุ</span>
+                </td>
+                <td class="whitespace-nowrap px-3 py-3 text-right">
+                  <button
+                    type="button" (click)="startEdit(c)"
+                    class="rounded-lg bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-200">
+                    แก้ไข
+                  </button>
+                  <button
+                    type="button" (click)="askDelete(c)"
+                    class="ml-1.5 rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-600 hover:text-white">
+                    ลบ
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===== Modal ยืนยันการลบ ===== -->
+  <div
+    *ngIf="deleteTarget() as target"
+    class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4"
+    (click)="cancelDelete()">
+    <div
+      class="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
+      (click)="$event.stopPropagation()">
+      <h3 class="mb-2 text-lg font-semibold">ยืนยันการลบ</h3>
+      <p class="mb-4 text-sm leading-relaxed text-slate-500">
+        ต้องการลบ
+        <strong class="text-slate-800">{{ target.first_name }} {{ target.last_name }}</strong>
+        ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้
+      </p>
+      <div class="flex gap-2">
+        <button
+          type="button" (click)="confirmDelete()"
+          class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+          ลบเลย
+        </button>
+        <button
+          type="button" (click)="cancelDelete()"
+          class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
