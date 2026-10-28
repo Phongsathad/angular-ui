@@ -1,9 +1,9 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 import { forkJoin } from 'rxjs';
+import { RiderTask } from '../rider-task/rider-task';
 
 interface OptimizationResult {
   riderId: number;
@@ -16,6 +16,7 @@ interface OptimizationResult {
   profit: number;
   orders: string[];
   duration: number;
+  color: string;
 }
 
 interface DeliveryStop {
@@ -30,6 +31,7 @@ interface DeliveryStop {
 interface RiderRoute {
   riderId: number;
   riderName: string;
+  color: string;
   totalBoxes: number;
   totalOrders: number;
   stops: DeliveryStop[];
@@ -51,7 +53,7 @@ interface OsrmRouteResponse {
 @Component({
   selector: 'app-route-optimization',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RiderTask],
   templateUrl: './route-optimization.html',
   styleUrl: './route-optimization.css'
 })
@@ -64,7 +66,6 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
 
   // พิกัดร้านค้า (จุดเริ่มต้นและสิ้นสุด)
   private readonly store = { latitude: 16.2470296, longitude: 103.2505615 };
-  private routeStops: { latitude: number; longitude: number; name: string }[] = [];
   
   routeStatus = 'กำลังโหลดข้อมูลและจัดสรรเส้นทาง...';
 
@@ -72,6 +73,10 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
   totalProfit = 0;
   assignments: OptimizationResult[] = [];
   optimizedRiders: RiderRoute[] = [];
+  showRiderTasks = false;
+
+  // สีประจำตัวไรเดอร์แต่ละคัน
+  private readonly riderColors = ['#ef5148', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
 
   ngOnInit(): void {
     this.fetchAndOptimizeRoutes();
@@ -108,29 +113,30 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
     }).subscribe({
       next: ({ customers, orders, riders }) => {
         if (!orders || orders.length === 0) {
+          this.clearRouteDisplay();
           this.routeStatus = 'ไม่พบข้อมูลคำสั่งซื้อในระบบ';
           return;
         }
 
-        // 1. กรองเอาเฉพาะออเดอร์ที่ยังไม่เสร็จสิ้น (ตัด status === 'completed' ออก)
+        // กรองเฉพาะออเดอร์ที่ยังไม่เสร็จสิ้น (status !== 'completed')
         const pendingOrders = orders.filter(order => 
           order.status !== 'completed' && order.status !== 'Completed'
         );
 
         if (pendingOrders.length === 0) {
-          this.routeStatus = 'ไม่มีออเดอร์ค้างส่งในระบบ (จัดส่งครบหมดแล้ว)';
-          this.assignments = [];
-          this.routeStops = [];
+          this.clearRouteDisplay();
+          this.routeStatus = 'กำลังโหลดแผนงานที่บันทึกไว้...';
+          this.loadSavedRoutes(riders);
           return;
         }
 
         const activeRiders = riders.filter(r => r.is_active === 1 || r.is_active === true);
         if (activeRiders.length === 0) {
+          this.clearRouteDisplay();
           this.routeStatus = 'ไม่พบไรเดอร์ที่พร้อมปฏิบัติงานในระบบ';
           return;
         }
 
-        // 2. แปลงข้อมูลออเดอร์ที่ยังไม่ส่ง จับคู่กับพิกัดลูกค้า
         let rawOrders = pendingOrders.map((order) => {
           const customer = customers.find(c => c.customer_id === order.customer_id);
           return {
@@ -149,6 +155,7 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
         let unassignedOrders = [...rawOrders];
         let riderIndex = 0;
 
+        // วนลูปแบ่งกลุ่มออเดอร์ให้ไรเดอร์แต่ละคน (สูงสุด 10 กล่องต่อคัน)
         while (unassignedOrders.length > 0 && riderIndex < activeRiders.length) {
           const currentRider = activeRiders[riderIndex];
           let currentBatch: typeof rawOrders = [];
@@ -163,6 +170,7 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
             return true;
           });
 
+          // จัดเรียงจุดส่งด้วย Nearest Neighbor
           let sortedStops: DeliveryStop[] = [];
           let currentLat = this.store.latitude;
           let currentLng = this.store.longitude;
@@ -194,9 +202,12 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
             currentLng = nextOrder.lng;
           }
 
+          const assignedColor = this.riderColors[riderIndex % this.riderColors.length];
+
           this.optimizedRiders.push({
             riderId: currentRider.rider_id,
             riderName: currentRider.name,
+            color: assignedColor,
             totalBoxes: currentBoxes,
             totalOrders: sortedStops.length,
             stops: sortedStops,
@@ -207,12 +218,13 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
           riderIndex++;
         }
 
-        this.routeStops = rawOrders.map(o => ({ latitude: o.lat, longitude: o.lng, name: o.first_name }));
         this.totalBoxes = rawOrders.reduce((sum, o) => sum + o.box_count, 0);
 
+        // แปลงข้อมูลเป็น assignments สำหรับแสดงผลใน UI
         this.assignments = this.optimizedRiders.map(rider => ({
           riderId: rider.riderId,
           riderName: rider.riderName,
+          color: rider.color,
           totalBoxes: rider.totalBoxes,
           totalOrders: rider.totalOrders,
           totalDistance: 0,
@@ -230,10 +242,86 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
         }, 100);
       },
       error: (err) => {
+        this.clearRouteDisplay();
         console.error('ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้', err);
         this.routeStatus = 'โหลดข้อมูลไม่สำเร็จ';
       }
     });
+  }
+
+  private loadSavedRoutes(riders: any[]): void {
+    const activeRiders = riders.filter(rider => rider.is_active === 1 || rider.is_active === true);
+    if (activeRiders.length === 0) {
+      this.routeStatus = 'ไม่พบไรเดอร์ที่พร้อมปฏิบัติงานในระบบ';
+      return;
+    }
+
+    forkJoin(activeRiders.map(rider =>
+      this.http.get<any[]>(`https://project-adv-webx.vercel.app/api/riders/${rider.rider_id}/tasks`)
+    )).subscribe({
+      next: (tasksByRider) => {
+        this.optimizedRiders = activeRiders.flatMap((rider, index) => {
+          const tasks = tasksByRider[index] || [];
+          const stops: DeliveryStop[] = tasks.map(task => ({
+            orderId: Number(task.order_id),
+            customerName: `${task.first_name} ${task.last_name || ''}`.trim(),
+            lat: Number(task.lat),
+            lng: Number(task.lng),
+            boxCount: Number(task.box_count) || 1,
+          }));
+
+          if (stops.length === 0) return [];
+
+          return [{
+            riderId: rider.rider_id,
+            riderName: rider.name,
+            color: this.riderColors[index % this.riderColors.length],
+            totalBoxes: stops.reduce((sum, stop) => sum + stop.boxCount, 0),
+            totalOrders: stops.length,
+            stops,
+            totalDistance: 0,
+            duration: 0,
+          }];
+        });
+
+        this.totalBoxes = this.optimizedRiders.reduce((sum, rider) => sum + rider.totalBoxes, 0);
+        this.assignments = this.optimizedRiders.map(rider => ({
+          riderId: rider.riderId,
+          riderName: rider.riderName,
+          color: rider.color,
+          totalBoxes: rider.totalBoxes,
+          totalOrders: rider.totalOrders,
+          totalDistance: 0,
+          revenue: rider.totalOrders * 50,
+          deliveryCost: 15,
+          profit: (rider.totalOrders * 50) - 15,
+          duration: 0,
+          orders: rider.stops.map(stop => `${stop.customerName} (${stop.boxCount} กล่อง)`),
+        }));
+
+        if (this.optimizedRiders.length === 0) {
+          this.routeStatus = 'ไม่มีออเดอร์ค้างส่งหรือแผนงานของวันนี้';
+          return;
+        }
+
+        this.routeStatus = `แสดงแผนงานที่บันทึกไว้ (${this.optimizedRiders.length} คัน)`;
+        setTimeout(() => this.initializeMap(), 100);
+      },
+      error: (err) => {
+        console.error('ไม่สามารถโหลดแผนงานที่บันทึกไว้ได้', err);
+        this.routeStatus = 'โหลดแผนงานที่บันทึกไว้ไม่สำเร็จ';
+      }
+    });
+  }
+
+  private clearRouteDisplay(): void {
+    this.routeRequests.forEach(request => request.abort());
+    this.routeRequests = [];
+    this.map?.remove();
+    this.map = undefined;
+    this.optimizedRiders = [];
+    this.assignments = [];
+    this.totalBoxes = 0;
   }
 
   saveRoutePlanToDatabase(): void {
@@ -245,9 +333,9 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
     const payload = {
       plan_date: new Date().toISOString().split('T')[0],
       depart_time: '11:30:00',
-      assignments: this.optimizedRiders.map((rider, index) => ({
+      assignments: this.optimizedRiders.map(rider => ({
         riderId: rider.riderId,
-        color: index === 0 ? '#ef5148' : index === 1 ? '#3b82f6' : '#10b981',
+        color: rider.color,
         stops: rider.stops.map(stop => ({
           orderId: stop.orderId
         }))
@@ -284,23 +372,28 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map);
 
-    const stops = [
-      [this.store.latitude, this.store.longitude] as L.LatLngExpression,
-      ...this.routeStops.map((stop) => [stop.latitude, stop.longitude] as L.LatLngExpression),
-      [this.store.latitude, this.store.longitude] as L.LatLngExpression,
-    ];
+    let allLatLngs: L.LatLngExpression[] = [[this.store.latitude, this.store.longitude]];
 
-    this.routeStops.forEach((stop, index) => {
-      L.marker([stop.latitude, stop.longitude], {
-        icon: L.divIcon({
-          className: '',
-          html: `<span style="display:grid;place-items:center;width:34px;height:34px;border:3px solid #fff;border-radius:50%;background:#ef4136;color:#fff;font:700 15px/1 sans-serif;box-shadow:0 2px 8px #0003">${index + 1}</span>`,
-          iconSize: [34, 34],
-          iconAnchor: [17, 17],
-        }),
-      }).addTo(map).bindTooltip(stop.name);
+    // ปักหมุดและวาดเส้นทางแยกตามสีของไรเดอร์แต่ละคน
+    this.optimizedRiders.forEach((rider) => {
+      rider.stops.forEach((stop, index) => {
+        allLatLngs.push([stop.lat, stop.lng]);
+
+        L.marker([stop.lat, stop.lng], {
+          icon: L.divIcon({
+            className: '',
+            html: `<span style="display:grid;place-items:center;width:32px;height:32px;border:3px solid #fff;border-radius:50%;background:${rider.color};color:#fff;font:700 13px/1 sans-serif;box-shadow:0 2px 6px #0004">${index + 1}</span>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+          }),
+        }).addTo(map).bindTooltip(`<b>${rider.riderName}</b><br>${stop.customerName} (${stop.boxCount} กล่อง)`);
+      });
+
+      // โหลดเส้นทางถนนจริง (OSRM) แยกตามเส้นทางของแต่ละไรเดอร์
+      void this.loadRoadRouteForRider(map, rider);
     });
 
+    // ปักหมุดร้านค้า
     L.marker([this.store.latitude, this.store.longitude], {
       icon: L.divIcon({
         className: '',
@@ -308,20 +401,22 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
         iconSize: [58, 34],
         iconAnchor: [29, 17],
       }),
-    }).addTo(map).bindTooltip('จุดเริ่มต้น');
+    }).addTo(map).bindTooltip('จุดเริ่มต้น (ร้าน)');
 
-    if (stops.length > 1) {
-      map.fitBounds(L.latLngBounds(stops), { padding: [40, 40] });
+    if (allLatLngs.length > 1) {
+      map.fitBounds(L.latLngBounds(allLatLngs), { padding: [40, 40] });
     }
-    void this.loadRoadRoute(map);
   }
 
-  private async loadRoadRoute(map: L.Map): Promise<void> {
-    if (this.routeStops.length === 0) return;
+  private async loadRoadRouteForRider(map: L.Map, rider: RiderRoute): Promise<void> {
+    if (rider.stops.length === 0) return;
 
-    const waypoints = [this.store, ...this.routeStops, this.store]
-      .map(({ latitude, longitude }) => `${longitude},${latitude}`)
-      .join(';');
+    const waypoints = [
+      this.store,
+      ...rider.stops.map(s => ({ latitude: s.lat, longitude: s.lng })),
+      this.store
+    ].map(loc => `${loc.longitude},${loc.latitude}`).join(';');
+
     const url = `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson&steps=false`;
     const controller = new AbortController();
     this.routeRequests.push(controller);
@@ -339,29 +434,34 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
       const roadCoordinates = route.geometry.coordinates.map(
         ([longitude, latitude]) => [latitude, longitude] as L.LatLngExpression,
       );
-      const routeLine = L.polyline(roadCoordinates, {
-        color: '#ef5148',
+
+      // วาดเส้นทางโพลีไลน์ด้วยสีประจำตัวของไรเดอร์คนนั้นๆ
+      L.polyline(roadCoordinates, {
+        color: rider.color,
         weight: 5,
-        opacity: 0.9,
+        opacity: 0.85,
         lineJoin: 'round',
       }).addTo(map);
-
-      map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
 
       const calculatedDistance = Number((route.distance / 1000).toFixed(2));
       const calculatedDuration = Math.ceil(route.duration / 60);
 
-      this.assignments = this.assignments.map((assignment) => ({
-        ...assignment,
-        totalDistance: calculatedDistance,
-        duration: calculatedDuration,
-      }));
+      // อัปเดตระยะทางและเวลาเดินทางในการ์ดของไรเดอร์คนนั้น
+      this.assignments = this.assignments.map((assignment) => {
+        if (assignment.riderId === rider.riderId) {
+          return {
+            ...assignment,
+            totalDistance: calculatedDistance,
+            duration: calculatedDuration,
+          };
+        }
+        return assignment;
+      });
 
       this.routeStatus = 'คำนวณเส้นทางถนนจริงสำเร็จ';
     } catch (error) {
       if (controller.signal.aborted) return;
-      this.routeStatus = 'โหลดเส้นทางถนนไม่สำเร็จ';
-      console.error('Unable to load road route from OSRM', error);
+      console.error(`Unable to load road route for rider ${rider.riderName}`, error);
     }
   }
 }

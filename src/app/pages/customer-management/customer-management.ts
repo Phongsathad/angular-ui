@@ -1,32 +1,37 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomerService, Customer } from '../../services/customer.service';
 
 @Component({
   selector: 'app-customer-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './customer-management.html'
 })
 export class CustomerManagement implements OnInit {
   private customerService = inject(CustomerService);
 
-  // ---------- Data ----------
+  // ---------- Data Signals ----------
   customers = signal<Customer[]>([]);
-  currentCustomer = signal<Customer>(this.emptyCustomer());
-  googleMapsUrl = signal('');
-  searchText: string = '';
+  isLoading = signal<boolean>(false);
+  isSaving = signal<boolean>(false);
 
-  // ---------- State ----------
-  editingId = signal<number | null>(null);
-  deleteTarget = signal<Customer | null>(null);
-  isLoading = signal(false);
-  isSaving = signal(false);
-  formError = signal('');
+  // ---------- Form เพิ่มลูกค้าใหม่ Signals ----------
+  newFirstName = signal<string>('');
+  newLastName = signal<string>('');
+  newPhone = signal<string>('');
+  newLat = signal<number | null>(null);
+  newLng = signal<number | null>(null);
+  newMapsUrl = signal<string>(''); // สำหรับวางลิงก์ Google Maps
 
-  // ---------- Toast ----------
-  toastMessage = signal('');
+  // ---------- Modal แก้ไขลูกค้า Signals ----------
+  isEditMode = signal<boolean>(false);
+  editingCustomer = signal<Customer | null>(null);
+  editMapsUrl = signal<string>(''); // สำหรับวางลิงก์ใน Modal แก้ไข
+
+  // ---------- Toast Notification Signals ----------
+  toastMessage = signal<string>('');
   toastType = signal<'success' | 'error'>('success');
   private toastTimer: any;
 
@@ -34,17 +39,7 @@ export class CustomerManagement implements OnInit {
     this.loadCustomers();
   }
 
-  emptyCustomer(): Customer {
-    return {
-      first_name: '',
-      last_name: '',
-      phone: '',
-      lat: 0,
-      lng: 0
-    };
-  }
-
-  // ---------- Load ----------
+  // โหลดรายการลูกค้าทั้งหมด
   loadCustomers() {
     this.isLoading.set(true);
     this.customerService.getCustomers().subscribe({
@@ -60,182 +55,157 @@ export class CustomerManagement implements OnInit {
     });
   }
 
-  // ---------- Search Filter ----------
-  get filteredCustomers(): Customer[] {
-    const keyword = this.searchText.trim().toLowerCase();
-    const all = this.customers();
-    if (!keyword) {
-      return all;
+  // ---------- ฟังก์ชันดึงพิกัดจากลิงก์ Google Maps ----------
+  extractLatLngFromUrl(url: string): { lat: number; lng: number } | null {
+    if (!url) return null;
+
+    // รองรับลิงก์หลายรูปแบบ เช่น @16.1944,103.2536 หรือ ?q=16.1944,103.2536 หรือพิกัด 16.1944,103.2536
+    const regexAt = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const regexQ = /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const regexPair = /(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/;
+
+    const match = url.match(regexAt) || url.match(regexQ) || url.match(regexPair);
+    if (match && match[1] && match[2]) {
+      return {
+        lat: parseFloat(match[1]),
+        lng: parseFloat(match[2])
+      };
     }
+    return null;
+  }
 
-    const result: Customer[] = [];
-    for (let i = 0; i < all.length; i++) {
-      const c = all[i];
-      const text = (c.first_name + ' ' + c.last_name + ' ' + (c.phone || '')).toLowerCase();
-      if (text.includes(keyword)) {
-        result.push(c);
-      }
+  // เมื่อวางลิงก์ Google Maps ในฟอร์มเพิ่มลูกค้า
+  onAddMapsUrlChange(url: string) {
+    this.newMapsUrl.set(url);
+    const coords = this.extractLatLngFromUrl(url);
+    if (coords) {
+      this.newLat.set(coords.lat);
+      this.newLng.set(coords.lng);
+      this.showToast('📌 ดึงพิกัดจากลิงก์สำเร็จ', 'success');
     }
-    return result;
   }
 
-  // ---------- Helpers ----------
-  get isEditMode(): boolean {
-    return this.editingId() !== null;
+  // เมื่อวางลิงก์ Google Maps ใน Modal แก้ไข
+  onEditMapsUrlChange(url: string) {
+    this.editMapsUrl.set(url);
+    const coords = this.extractLatLngFromUrl(url);
+    const current = this.editingCustomer();
+    if (coords && current) {
+      this.editingCustomer.set({
+        ...current,
+        lat: coords.lat,
+        lng: coords.lng
+      });
+      this.showToast('📌 ดึงพิกัดจากลิงก์สำเร็จ', 'success');
+    }
   }
 
-  get hasCoordinates(): boolean {
-    const c = this.currentCustomer();
-    return Number(c.lat) !== 0 || Number(c.lng) !== 0;
+  // สร้าง URL ลิงก์ไป Google Maps
+  getGoogleMapsLink(lat?: number, lng?: number): string {
+    if (lat === undefined || lng === undefined || lat === null || lng === null) {
+      return '#';
+    }
+    return `https://www.google.com/maps?q=${lat},${lng}`;
   }
 
-  hasLocation(c: Customer): boolean {
-    return Number(c.lat) !== 0 || Number(c.lng) !== 0;
-  }
-
-  mapsLink(lat: number, lng: number): string {
-    return 'https://www.google.com/maps?q=' + lat + ',' + lng;
-  }
-
-  startEdit(c: Customer) {
-    this.editingId.set(c.customer_id ?? null);
-    this.currentCustomer.set({
-      customer_id: c.customer_id,
-      first_name: c.first_name,
-      last_name: c.last_name,
-      phone: c.phone || '',
-      lat: Number(c.lat),
-      lng: Number(c.lng)
-    });
-    this.googleMapsUrl.set('');
-    this.formError.set('');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  resetForm() {
-    this.editingId.set(null);
-    this.googleMapsUrl.set('');
-    this.formError.set('');
-    this.currentCustomer.set(this.emptyCustomer());
-  }
-
-  // ---------- Google Maps Extract ----------
-  extractLatLngFromUrl() {
-    const url = this.googleMapsUrl().trim();
-    if (!url) {
-      this.showToast('กรุณาวางลิงก์ Google Maps ก่อน', 'error');
+  // เพิ่มลูกค้าใหม่
+  addCustomer() {
+    if (!this.newFirstName() || !this.newPhone()) {
+      this.showToast('กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ครบถ้วน', 'error');
       return;
     }
 
-    const placeMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    const queryMatch = url.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-
-    const found = placeMatch || atMatch || queryMatch;
-
-    if (found) {
-      const lat = parseFloat(found[1]);
-      const lng = parseFloat(found[2]);
-      this.currentCustomer.update((c) => ({ ...c, lat: lat, lng: lng }));
-      this.showToast('ดึงพิกัดสำเร็จ', 'success');
-    } else {
-      this.showToast('ไม่พบพิกัดในลิงก์นี้ ลองพิมพ์ lat/lng เอง', 'error');
-    }
-  }
-
-  // ---------- Validate ----------
-  validateForm(): string {
-    const c = this.currentCustomer();
-    if (!c.first_name.trim() || !c.last_name.trim()) {
-      return 'กรุณากรอกชื่อและนามสกุล';
-    }
-    return '';
-  }
-
-  // ---------- Save (Add / Update) ----------
-  saveCustomer() {
-    const error = this.validateForm();
-    this.formError.set(error);
-    if (error) {
-      return;
-    }
-
-    const c = this.currentCustomer();
     const payload: Customer = {
-      first_name: c.first_name.trim(),
-      last_name: c.last_name.trim(),
-      phone: c.phone ? c.phone.trim() : '',
-      lat: Number(c.lat),
-      lng: Number(c.lng)
+      first_name: this.newFirstName(),
+      last_name: this.newLastName(),
+      phone: this.newPhone(),
+      lat: this.newLat() ?? 0,
+      lng: this.newLng() ?? 0
     };
 
     this.isSaving.set(true);
-    const id = this.editingId();
-
-    if (id !== null) {
-      this.customerService.updateCustomer(id, payload).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.showToast('แก้ไขข้อมูลลูกค้าเรียบร้อย', 'success');
-          this.loadCustomers();
-          this.resetForm();
-        },
-        error: () => {
-          this.isSaving.set(false);
-          this.showToast('แก้ไขไม่สำเร็จ', 'error');
-        }
-      });
-    } else {
-      this.customerService.addCustomer(payload).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.showToast('เพิ่มลูกค้าใหม่เรียบร้อย', 'success');
-          this.loadCustomers();
-          this.resetForm();
-        },
-        error: () => {
-          this.isSaving.set(false);
-          this.showToast('เกิดข้อผิดพลาดในการเพิ่มลูกค้า', 'error');
-        }
-      });
-    }
-  }
-
-  // ---------- Delete Modal Handlers ----------
-  askDelete(c: Customer) {
-    this.deleteTarget.set(c);
-  }
-
-  cancelDelete() {
-    this.deleteTarget.set(null);
-  }
-
-  confirmDelete() {
-    const target = this.deleteTarget();
-    if (!target || target.customer_id === undefined) {
-      return;
-    }
-
-    const id = target.customer_id;
-    this.customerService.deleteCustomer(id).subscribe({
+    this.customerService.addCustomer(payload).subscribe({
       next: () => {
-        this.showToast('ลบข้อมูลเรียบร้อย', 'success');
-        this.deleteTarget.set(null);
+        this.isSaving.set(false);
+        this.showToast('เพิ่มข้อมูลลูกค้าใหม่สำเร็จ', 'success');
+        this.resetAddForm();
         this.loadCustomers();
-        if (this.editingId() === id) {
-          this.resetForm();
-        }
       },
-      error: () => {
-        this.deleteTarget.set(null);
-        this.showToast('เกิดข้อผิดพลาดในการลบ', 'error');
+      error: (err) => {
+        console.error(err);
+        this.isSaving.set(false);
+        this.showToast('เกิดข้อผิดพลาดในการเพิ่มลูกค้า', 'error');
       }
     });
   }
 
-  // ---------- Toast ----------
-  showToast(message: string, type: 'success' | 'error') {
-    this.toastMessage.set(message);
+  resetAddForm() {
+    this.newFirstName.set('');
+    this.newLastName.set('');
+    this.newPhone.set('');
+    this.newLat.set(null);
+    this.newLng.set(null);
+    this.newMapsUrl.set('');
+  }
+
+  // เปิด Modal แก้ไขลูกค้า
+  openEditModal(customer: Customer) {
+    this.editingCustomer.set({ ...customer });
+    this.editMapsUrl.set(customer.lat && customer.lng ? this.getGoogleMapsLink(customer.lat, customer.lng) : '');
+    this.isEditMode.set(true);
+  }
+
+  // ปิด Modal แก้ไข
+  closeEditModal() {
+    this.editingCustomer.set(null);
+    this.editMapsUrl.set('');
+    this.isEditMode.set(false);
+  }
+
+  // บันทึกการแก้ไขข้อมูลลูกค้า
+  saveEditCustomer() {
+    const cust = this.editingCustomer();
+    if (!cust || !cust.customer_id) return;
+
+    if (!cust.first_name || !cust.phone) {
+      this.showToast('กรุณากรอกชื่อและเบอร์โทรศัพท์', 'error');
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.customerService.updateCustomer(cust.customer_id, cust).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.showToast('อัปเดตข้อมูลลูกค้าสำเร็จ', 'success');
+        this.closeEditModal();
+        this.loadCustomers();
+      },
+      error: (err) => {
+        console.error(err);
+        this.isSaving.set(false);
+        this.showToast('เกิดข้อผิดพลาดในการแก้ไขลูกค้า', 'error');
+      }
+    });
+  }
+
+  // ลบลูกค้า
+  deleteCustomer(id: number) {
+    if (confirm('คุณต้องการลบข้อมูลลูกค้ารายนี้ใช่หรือไม่?')) {
+      this.customerService.deleteCustomer(id).subscribe({
+        next: () => {
+          this.showToast('ลบข้อมูลลูกค้าเรียบร้อย', 'success');
+          this.loadCustomers();
+        },
+        error: (err) => {
+          console.error(err);
+          this.showToast('เกิดข้อผิดพลาดในการลบลูกค้า', 'error');
+        }
+      });
+    }
+  }
+
+  showToast(msg: string, type: 'success' | 'error') {
+    this.toastMessage.set(msg);
     this.toastType.set(type);
 
     clearTimeout(this.toastTimer);

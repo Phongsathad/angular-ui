@@ -36,10 +36,10 @@
       </button>
     </div>
 
-    <!-- การ์ดแสดงผลงานของไรเดอร์แต่ละคน -->
-    <article class="run-card" *ngFor="let assign of assignments">
+    <!-- การ์ดแสดงผลงานของไรเดอร์แต่ละคน พร้อมแถบสีประจำตัว -->
+    <article class="run-card" *ngFor="let assign of assignments" [style.border-left]="'6px solid ' + assign.color">
       <div class="run-card__top">
-        <span class="rider-status-dot"></span>
+        <span class="rider-status-dot" [style.background-color]="assign.color"></span>
         <div class="rider-details">
           <h3>{{ assign.riderName }}</h3>
           <p>ไรเดอร์ประจำรอบนี้</p>
@@ -55,19 +55,20 @@
 
       <ol class="stop-list">
         <li *ngFor="let order of assign.orders; let index = index">
-          <span class="stop-number">{{ index + 1 }}</span>
+          <span class="stop-number" [style.background-color]="assign.color" style="color: white;">{{ index + 1 }}</span>
           <span>{{ order }}</span>
         </li>
       </ol>
     </article>
 
-    <a class="rider-link" routerLink="/rider-task">
+    <button class="rider-link" type="button" (click)="showRiderTasks = true">
       <span class="rider-link__icon" aria-hidden="true">♙</span>
       <span class="rider-link__copy">
         <strong>เข้าสู่ระบบไรเดอร์</strong>
         <small>เปิดใบงานบนมือถือ</small>
       </span>
       <span class="rider-link__arrow" aria-hidden="true">→</span>
-    </a>
+    </button>
+    <app-rider-task *ngIf="showRiderTasks" [embedded]="true" (close)="showRiderTasks = false" />
   </aside>
 </main>

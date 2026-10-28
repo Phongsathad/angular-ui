@@ -7,8 +7,8 @@ export interface Customer {
   first_name: string;
   last_name: string;
   phone: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
 }
 
 @Injectable({
@@ -23,15 +23,15 @@ export class CustomerService {
   }
 
   addCustomer(customer: Customer): Observable<any> {
-    return this.http.post<any>(this.apiUrl, customer);
+    return this.http.post(this.apiUrl, customer);
   }
 
-  // ใหม่: แก้ไขข้อมูลลูกค้า (ต้องมี route PUT /api/customers/:id ที่ backend)
+  // 🟢 เพิ่มฟังก์ชันยิง API แก้ไขลูกค้า
   updateCustomer(id: number, customer: Customer): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}`, customer);
+    return this.http.put(`${this.apiUrl}/${id}`, customer);
   }
 
   deleteCustomer(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 }
