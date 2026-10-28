@@ -1,9 +1,9 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 import { forkJoin } from 'rxjs';
-import { RiderTask } from '../rider-task/rider-task';
 
 interface OptimizationResult {
   riderId: number;
@@ -53,16 +53,18 @@ interface OsrmRouteResponse {
 @Component({
   selector: 'app-route-optimization',
   standalone: true,
-  imports: [CommonModule, RiderTask],
+  imports: [CommonModule, RouterLink, RouterOutlet],
   templateUrl: './route-optimization.html',
   styleUrl: './route-optimization.css'
 })
 export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
+  private readonly selectedRiderStorageKey = 'route-optimization-selected-rider';
   private routeMapElement = viewChild('routeMap', { read: ElementRef });
 
   private http = inject(HttpClient);
   private map?: L.Map;
   private routeRequests: AbortController[] = [];
+  private riderRouteLayers = new Map<number, { outline: L.Polyline; route: L.Polyline }>();
 
   // พิกัดร้านค้า (จุดเริ่มต้นและสิ้นสุด)
   private readonly store = { latitude: 16.2470296, longitude: 103.2505615 };
@@ -73,12 +75,14 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
   totalProfit = 0;
   assignments: OptimizationResult[] = [];
   optimizedRiders: RiderRoute[] = [];
-  showRiderTasks = false;
+  selectedRiderId: number | null = null;
 
   // สีประจำตัวไรเดอร์แต่ละคัน
-  private readonly riderColors = ['#ef5148', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+  private readonly riderColors = ['#d62828', '#0077b6', '#2a9d8f', '#f77f00', '#6a4c93'];
 
   ngOnInit(): void {
+    const savedRiderId = localStorage.getItem(this.selectedRiderStorageKey);
+    this.selectedRiderId = savedRiderId ? Number(savedRiderId) : null;
     this.fetchAndOptimizeRoutes();
   }
 
@@ -322,6 +326,25 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
     this.optimizedRiders = [];
     this.assignments = [];
     this.totalBoxes = 0;
+    this.riderRouteLayers.clear();
+  }
+
+  toggleRiderRoute(riderId: number): void {
+    this.selectedRiderId = this.selectedRiderId === riderId ? null : riderId;
+    if (this.selectedRiderId === null) {
+      localStorage.removeItem(this.selectedRiderStorageKey);
+    } else {
+      localStorage.setItem(this.selectedRiderStorageKey, String(this.selectedRiderId));
+    }
+    this.updateRouteHighlight();
+  }
+
+  private updateRouteHighlight(): void {
+    this.riderRouteLayers.forEach((layers, riderId) => {
+      const isHighlighted = this.selectedRiderId === null || this.selectedRiderId === riderId;
+      layers.outline.setStyle({ opacity: isHighlighted ? 0.95 : 0.25, weight: isHighlighted ? 12 : 8 });
+      layers.route.setStyle({ opacity: isHighlighted ? 1 : 0.18, weight: isHighlighted ? 7 : 4 });
+    });
   }
 
   saveRoutePlanToDatabase(): void {
@@ -362,6 +385,11 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.map) {
       this.map.remove();
+    }
+    this.riderRouteLayers.clear();
+    if (!this.optimizedRiders.some(rider => rider.riderId === this.selectedRiderId)) {
+      this.selectedRiderId = null;
+      localStorage.removeItem(this.selectedRiderStorageKey);
     }
 
     const map = L.map(element, { scrollWheelZoom: false });
@@ -436,12 +464,24 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
       );
 
       // วาดเส้นทางโพลีไลน์ด้วยสีประจำตัวของไรเดอร์คนนั้นๆ
-      L.polyline(roadCoordinates, {
-        color: rider.color,
-        weight: 5,
-        opacity: 0.85,
+      const outline = L.polyline(roadCoordinates, {
+        color: '#ffffff',
+        weight: 10,
+        opacity: 0.95,
+        lineCap: 'round',
         lineJoin: 'round',
       }).addTo(map);
+
+      const routeLine = L.polyline(roadCoordinates, {
+        color: rider.color,
+        weight: 6,
+        opacity: 1,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(map).bindTooltip(`<b>${rider.riderName}</b><br>${rider.stops.length} จุดส่ง`);
+
+      this.riderRouteLayers.set(rider.riderId, { outline, route: routeLine });
+      this.updateRouteHighlight();
 
       const calculatedDistance = Number((route.distance / 1000).toFixed(2));
       const calculatedDuration = Math.ceil(route.duration / 60);

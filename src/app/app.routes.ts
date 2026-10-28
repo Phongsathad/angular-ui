@@ -8,6 +8,12 @@ export const routes: Routes = [
   { path: '', redirectTo: 'customers', pathMatch: 'full' }, // 👈 ปรับมาเข้าหน้าลูกค้าก่อนเป็นหน้าแรก
   { path: 'customers', component: CustomerManagement },
   { path: 'orders', component: OrderManagement },
-  { path: 'route-optimization', component: RouteOptimization },
-  { path: 'rider-task', component: RiderTask },
+  {
+    path: 'route-optimization',
+    component: RouteOptimization,
+    children: [
+      { path: 'rider-task', component: RiderTask },
+    ],
+  },
+  { path: 'rider-task', redirectTo: 'route-optimization/rider-task', pathMatch: 'full' },
 ];

@@ -10,15 +10,6 @@
   box-sizing: border-box;
 }
 
-.mobile-container.embedded {
-  max-width: none;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  font-family: inherit;
-}
-
 /* ส่วนหัวของหน้า (Header) */
 .rider-header {
   display: flex;
@@ -54,8 +45,6 @@
   padding: 6px 12px;
   border-radius: 20px;
   transition: background 0.2s;
-  border: 0;
-  cursor: pointer;
 }
 
 .back-link:hover {

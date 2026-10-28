@@ -14,19 +14,16 @@ export class OrderManagement implements OnInit {
   private orderService = inject(OrderService);
   private customerService = inject(CustomerService);
 
-  // ---------- Data Signals ----------
+  // ---------- Signals ----------
   orders = signal<Order[]>([]);
   customers = signal<Customer[]>([]);
 
-  // ---------- Form State Signals ----------
   selectedCustomerId = signal<number | null>(null);
   newOrderQuantity = signal<number>(1);
 
-  // ---------- UI State Signals ----------
   isLoading = signal<boolean>(false);
   isSaving = signal<boolean>(false);
 
-  // ---------- Toast Signals ----------
   toastMessage = signal<string>('');
   toastType = signal<'success' | 'error'>('success');
   private toastTimer: any;
@@ -69,7 +66,7 @@ export class OrderManagement implements OnInit {
     return customer ? `${customer.first_name} ${customer.last_name}` : `ลูกค้า ID #${customerId}`;
   }
 
-  // ---------- Helper แสดงสถานะ ----------
+  // ---------- Helpers แสดงสถานะ ----------
   getStatusLabel(status?: string): string {
     const s = status?.toLowerCase().trim();
     switch (s) {
@@ -100,7 +97,9 @@ export class OrderManagement implements OnInit {
     }
   }
 
-  // ---------- Action ----------
+  // ---------- Actions ----------
+
+  // 1. สร้างออเดอร์เดี่ยว
   addOrder() {
     const custId = this.selectedCustomerId();
     const qty = this.newOrderQuantity();
@@ -115,16 +114,8 @@ export class OrderManagement implements OnInit {
       return;
     }
 
-    const payload: Order = {
-      customer_id: Number(custId),
-      box_count: Number(qty),
-      deadline: '12:30:00', // ล็อกเป็น 12:30:00 ตามกฎร้าน
-      status: 'pending',
-      app_created: 1
-    };
-
     this.isSaving.set(true);
-    this.orderService.addOrder(payload).subscribe({
+    this.orderService.addOrder({ customer_id: Number(custId), box_count: Number(qty) }).subscribe({
       next: () => {
         this.isSaving.set(false);
         this.showToast('สร้างออเดอร์เรียบร้อย', 'success');
@@ -139,6 +130,50 @@ export class OrderManagement implements OnInit {
     });
   }
 
+  // 2. สุ่มออเดอร์ 1 รายการฝั่ง Client
+  randomSingleOrder() {
+    const custList = this.customers();
+    if (custList.length === 0) {
+      this.showToast('ไม่พบข้อมูลลูกค้าในระบบ', 'error');
+      return;
+    }
+
+    const randomCust = custList[Math.floor(Math.random() * custList.length)];
+    const randomQty = Math.floor(Math.random() * 3) + 1;
+
+    this.isSaving.set(true);
+    this.orderService.addOrder({ customer_id: Number(randomCust.customer_id), box_count: randomQty }).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.showToast(`🎲 สุ่มออเดอร์สำเร็จ: คุณ${randomCust.first_name} (${randomQty} กล่อง)`, 'success');
+        this.loadOrders();
+      },
+      error: (err) => {
+        console.error(err);
+        this.isSaving.set(false);
+        this.showToast('สุ่มออเดอร์ไม่สำเร็จ', 'error');
+      }
+    });
+  }
+
+  // 3. จำลองสุ่มออเดอร์ชุดใหญ่ 20-30 รายการผ่าน API Backend (/orders/simulate)
+  simulateBulkOrders() {
+    this.isSaving.set(true);
+    this.orderService.simulateOrders().subscribe({
+      next: (res) => {
+        this.isSaving.set(false);
+        this.showToast(`⚡ ${res.message || 'จำลองออเดอร์เรียบร้อยแล้ว'}`, 'success');
+        this.loadOrders();
+      },
+      error: (err) => {
+        console.error(err);
+        this.isSaving.set(false);
+        this.showToast('เกิดข้อผิดพลาดในการจำลองออเดอร์', 'error');
+      }
+    });
+  }
+
+  // 4. ลบออเดอร์เดียว
   deleteOrder(orderId: number) {
     if (confirm('คุณต้องการยกเลิกออเดอร์นี้ใช่หรือไม่?')) {
       this.orderService.deleteOrder(orderId).subscribe({
@@ -149,6 +184,22 @@ export class OrderManagement implements OnInit {
         error: (err) => {
           console.error(err);
           this.showToast('เกิดข้อผิดพลาดในการยกเลิกออเดอร์', 'error');
+        }
+      });
+    }
+  }
+
+  // 5. ล้างออเดอร์ทั้งหมด
+  clearAllOrders() {
+    if (confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างออเดอร์ทั้งหมดในระบบ?')) {
+      this.orderService.clearAllOrders().subscribe({
+        next: (res) => {
+          this.showToast(res.message || 'ล้างออเดอร์ทั้งหมดเรียบร้อยแล้ว', 'success');
+          this.loadOrders();
+        },
+        error: (err) => {
+          console.error(err);
+          this.showToast('เกิดข้อผิดพลาดในการล้างออเดอร์', 'error');
         }
       });
     }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -27,9 +27,6 @@ interface DeliveryTask {
 })
 export class RiderTask implements OnInit {
   private http = inject(HttpClient);
-
-  @Input() embedded = false;
-  @Output() close = new EventEmitter<void>();
   
   riders: any[] = [];
   selectedRiderId: any = null;

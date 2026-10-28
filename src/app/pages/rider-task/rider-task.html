@@ -1,4 +1,4 @@
-<main class="mobile-container" [class.embedded]="embedded">
+<main class="mobile-container">
   <header class="rider-header">
     <div>
       <p class="eyebrow">ระบบตรวจสอบใบงานจัดส่ง</p>
@@ -12,8 +12,7 @@
         </select>
       </div>
     </div>
-    <button *ngIf="embedded" type="button" class="back-link" (click)="close.emit()">กลับหน้าเส้นทาง</button>
-    <a *ngIf="!embedded" routerLink="/route-optimization" class="back-link">กลับหน้าแอดมิน</a>
+    <a routerLink="/route-optimization" class="back-link">กลับหน้าแอดมิน</a>
   </header>
 
   <!-- ส่วนแสดงผลรายการงานตามโค้ดเดิม -->

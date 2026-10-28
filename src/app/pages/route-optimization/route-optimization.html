@@ -11,8 +11,21 @@
     <div #routeMap class="route-map" role="application" aria-label="แผนที่เส้นทางจัดส่ง"></div>
 
     <div class="map-legend" *ngIf="assignments.length > 0">
-      <span class="legend-dot"></span>
-      <span>{{ assignments[0]?.riderName }} · {{ assignments[0]?.totalBoxes }} กล่อง <small *ngIf="assignments.length > 1">(และอีก {{ assignments.length - 1 }} คัน)</small></span>
+      <button
+        class="legend-item"
+        type="button"
+        *ngFor="let assign of assignments"
+        [class.is-selected]="selectedRiderId === assign.riderId"
+        [attr.aria-pressed]="selectedRiderId === assign.riderId"
+        (click)="toggleRiderRoute(assign.riderId)">
+        <span class="legend-dot" [style.background-color]="assign.color"></span>
+        <span>{{ assign.riderName }} · {{ assign.totalBoxes }} กล่อง</span>
+      </button>
+      <button
+        *ngIf="selectedRiderId !== null"
+        class="legend-reset"
+        type="button"
+        (click)="toggleRiderRoute(selectedRiderId)">แสดงทุกเส้น</button>
     </div>
   </section>
 
@@ -61,14 +74,7 @@
       </ol>
     </article>
 
-    <button class="rider-link" type="button" (click)="showRiderTasks = true">
-      <span class="rider-link__icon" aria-hidden="true">♙</span>
-      <span class="rider-link__copy">
-        <strong>เข้าสู่ระบบไรเดอร์</strong>
-        <small>เปิดใบงานบนมือถือ</small>
-      </span>
-      <span class="rider-link__arrow" aria-hidden="true">→</span>
-    </button>
-    <app-rider-task *ngIf="showRiderTasks" [embedded]="true" (close)="showRiderTasks = false" />
+    
+    <router-outlet />
   </aside>
 </main>

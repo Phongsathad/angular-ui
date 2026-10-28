@@ -87,11 +87,40 @@
 
 .map-legend {
 	display: flex;
-	align-items: center;
-	gap: 8px;
+	flex-wrap: wrap;
+	gap: 8px 16px;
 	margin-top: 16px;
 	color: #64748b;
 	font-size: 12px;
+}
+
+.legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 5px 8px;
+	border: 1px solid #dbe3eb;
+	border-radius: 7px;
+	background: #fff;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.legend-item.is-selected {
+	border-color: #334155;
+	box-shadow: 0 0 0 2px rgb(51 65 85 / 12%);
+}
+
+.legend-reset {
+	padding: 5px 8px;
+	border: 0;
+	background: transparent;
+	color: #475569;
+	font: inherit;
+	text-decoration: underline;
+	cursor: pointer;
 }
 
 .runs-panel {
