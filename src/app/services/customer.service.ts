@@ -1,0 +1,32 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface Customer {
+  customer_id?: number;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  lat: number;
+  lng: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CustomerService {
+  private http = inject(HttpClient);
+  private apiUrl = 'https://project-adv-webx.vercel.app/api/customers';
+
+  getCustomers(): Observable<Customer[]> {
+    return this.http.get<Customer[]>(this.apiUrl);
+  }
+
+  addCustomer(customer: Customer): Observable<any> {
+    return this.http.post<any>(this.apiUrl, customer);
+  }
+
+  deleteCustomer(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  }
+}

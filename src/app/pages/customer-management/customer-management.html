@@ -1,83 +1,64 @@
 <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-  <div style="margin-bottom: 1.5rem;">
-    <h2 style="margin: 0; font-size: 1.5rem; color: #0f172a;">👤 จัดการข้อมูลลูกค้า (GPS Coordinates)</h2>
-    <p style="margin: 0.2rem 0 0 0; color: #64748b; font-size: 0.9rem;">บันทึกพิกัดลูกค้าโดยตรง หรือวางลิงก์ Google Maps เพื่อดึงพิกัดอัตโนมัติ</p>
-  </div>
+  
+  <h2 style="margin-top: 0; color: #0f172a;">👥 จัดการข้อมูลลูกค้า (Customers)</h2>
 
-  <!-- Form -->
-  <div style="background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
-    <h4 style="margin: 0 0 1rem 0; color: #334155;">+ เพิ่มลูกค้าใหม่</h4>
+  <!-- ฟอร์มเพิ่มลูกค้า -->
+  <form (ngSubmit)="onSubmit()" style="background: #f8fafc; padding: 1.25rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+    <h4 style="margin: 0 0 1rem 0; color: #334155;">+ เพิ่มข้อมูลลูกค้าใหม่</h4>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
       <div>
-        <label style="font-size: 0.8rem; color: #475569; font-weight: 600;">ชื่อ (first_name):</label>
-        <input [(ngModel)]="newCustomer.first_name" placeholder="ชื่อ" style="width: 90%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;" />
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">ชื่อ:</label>
+        <input type="text" [(ngModel)]="newCustomer.first_name" name="first_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
       </div>
+
       <div>
-        <label style="font-size: 0.8rem; color: #475569; font-weight: 600;">นามสกุล (last_name):</label>
-        <input [(ngModel)]="newCustomer.last_name" placeholder="นามสกุล" style="width: 90%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;" />
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">นามสกุล:</label>
+        <input type="text" [(ngModel)]="newCustomer.last_name" name="last_name" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
       </div>
+
       <div>
-        <label style="font-size: 0.8rem; color: #475569; font-weight: 600;">เบอร์โทรศัพท์ (phone):</label>
-        <input [(ngModel)]="newCustomer.phone" placeholder="08XXXXXXXX" style="width: 90%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;" />
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">เบอร์โทรศัพท์:</label>
+        <input type="text" [(ngModel)]="newCustomer.phone" name="phone" required style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">Lat:</label>
+        <input type="number" step="any" [(ngModel)]="newCustomer.lat" name="lat" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">Lng:</label>
+        <input type="number" step="any" [(ngModel)]="newCustomer.lng" name="lng" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
       </div>
     </div>
 
-    <!-- Google Maps Parser -->
-    <div style="background: #ffffff; padding: 1rem; border-radius: 8px; border: 1px dashed #3b82f6; margin-bottom: 1rem;">
-      <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #1d4ed8; margin-bottom: 0.4rem;">
-        📍 วางลิงก์ Google Maps เพื่อดึงพิกัดอัตโนมัติ:
-      </label>
-      <div style="display: flex; gap: 0.5rem;">
-        <input [(ngModel)]="googleMapsUrlInput" placeholder="เช่น https://www.google.com/maps/place/.../@16.2493037,103.2557389,19z/..." style="flex: 1; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem;" />
-        <button (click)="extractLatLngFromUrl()" style="background: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer;">
-          ดึงพิกัด
-        </button>
-      </div>
-    </div>
-
-    <!-- Manual Lat / Lng -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;">
-      <div>
-        <label style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Latitude (lat):</label>
-        <input type="number" [(ngModel)]="newCustomer.lat" style="width: 95%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace;" />
-      </div>
-      <div>
-        <label style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Longitude (lng):</label>
-        <input type="number" [(ngModel)]="newCustomer.lng" style="width: 95%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace;" />
-      </div>
-    </div>
-
-    <button (click)="addCustomer()" style="background: #16a34a; color: white; border: none; padding: 0.65rem 1.6rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
+    <button type="submit" style="margin-top: 1rem; background: #16a34a; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
       บันทึกข้อมูลลูกค้า
     </button>
-  </div>
+  </form>
 
-  <!-- Table -->
+  <!-- ตารางแสดงข้อมูลลูกค้า -->
   <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
     <thead>
-      <tr style="background: #f1f5f9; color: #475569; text-align: left; border-bottom: 2px solid #e2e8f0;">
-        <th style="padding: 0.8rem 1rem;">ID</th>
-        <th style="padding: 0.8rem 1rem;">ชื่อ-นามสกุล</th>
-        <th style="padding: 0.8rem 1rem;">เบอร์โทรศัพท์</th>
-        <th style="padding: 0.8rem 1rem;">พิกัด GPS (Lat, Lng)</th>
-        <th style="padding: 0.8rem 1rem; text-align: center;">จัดการ</th>
+      <tr style="background: #f1f5f9; color: #475569; text-align: left;">
+        <th style="padding: 0.75rem;">ID</th>
+        <th style="padding: 0.75rem;">ชื่อ - นามสกุล</th>
+        <th style="padding: 0.75rem;">เบอร์โทรศัพท์</th>
+        <th style="padding: 0.75rem;">พิกัด (Lat, Lng)</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let c of customers" style="border-bottom: 1px solid #f1f5f9;">
-        <td style="padding: 0.8rem 1rem; font-weight: 700; color: #64748b;">#{{ c.customer_id }}</td>
-        <td style="padding: 0.8rem 1rem; font-weight: 600; color: #0f172a;">{{ c.first_name }} {{ c.last_name }}</td>
-        <td style="padding: 0.8rem 1rem; color: #475569;">{{ c.phone }}</td>
-        <td style="padding: 0.8rem 1rem;">
-          <a [href]="'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lng" target="_blank" style="background: #e0f2fe; color: #0369a1; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.85rem; text-decoration: none; font-weight: 600; display: inline-block;">
-            📍 {{ c.lat }}, {{ c.lng }}
-          </a>
-        </td>
-        <td style="padding: 0.8rem 1rem; text-align: center;">
-          <button (click)="deleteCustomer(c.customer_id)" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer;">ลบ</button>
-        </td>
+        <td style="padding: 0.75rem; font-weight: 600;">#{{ c.customer_id }}</td>
+        <td style="padding: 0.75rem;">{{ c.first_name }} {{ c.last_name }}</td>
+        <td style="padding: 0.75rem;">{{ c.phone }}</td>
+        <td style="padding: 0.75rem; color: #64748b;">{{ c.lat }}, {{ c.lng }}</td>
+      </tr>
+      <tr *ngIf="customers.length === 0">
+        <td colspan="4" style="text-align: center; padding: 2rem; color: #94a3b8;">ไม่พบข้อมูลลูกค้า</td>
       </tr>
     </tbody>
   </table>
+
 </div>
