@@ -1,49 +1,271 @@
-.campus-map {
-	margin-bottom: 2rem;
+.route-dashboard {
+	display: grid;
+	grid-template-columns: minmax(0, 1.8fr) minmax(320px, 0.95fr);
+	gap: 22px;
+	min-height: 570px;
+	color: #1e293b;
 }
 
-.campus-map__heading {
+.map-panel,
+.runs-panel {
+	min-width: 0;
+	padding: 20px;
+	border: 1px solid #e2e8f0;
+	border-radius: 20px;
+	background: #fff;
+	box-shadow: 0 1px 3px rgb(15 23 42 / 5%);
+}
+
+.panel-heading {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 1rem;
-	margin-bottom: 0.75rem;
+	gap: 16px;
+	margin-bottom: 18px;
 }
 
-.campus-map__heading h3 {
+.eyebrow {
+	margin: 0 0 7px;
+	color: #64748b;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 1.2px;
+	text-transform: uppercase;
+}
+
+.panel-heading h1,
+.panel-heading h2 {
 	margin: 0;
-	color: #334155;
-	font-size: 1.1rem;
+	color: #0f172a;
+	font-size: 17px;
+	font-weight: 700;
 }
 
-.campus-map__heading a {
-	color: #0369a1;
-	font-size: 0.9rem;
+.route-status,
+.run-count {
+	flex: 0 0 auto;
+	border-radius: 20px;
+	font-size: 12px;
 	font-weight: 600;
 }
 
-.campus-map__frame {
-	display: block;
+.route-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 8px 12px;
+	background: #f0fdf4;
+	color: #166534;
+}
+
+.run-count {
+	background: #eff6ff;
+	color: #1d4ed8;
+}
+
+.route-status span,
+.legend-dot,
+.rider-status-dot {
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: #ee493e;
+}
+
+.route-status span {
+	width: 7px;
+	height: 7px;
+	background: #22c55e;
+}
+
+.route-map {
 	width: 100%;
-	height: 380px;
-	border: 1px solid #cbd5e1;
-	border-radius: 6px;
+	height: clamp(350px, 56vh, 430px);
+	border-radius: 17px;
+	background: #f8fafc;
 }
 
-.campus-map__note {
-	margin: 0.5rem 0 0;
+.map-legend {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 16px;
 	color: #64748b;
-	font-size: 0.8rem;
+	font-size: 12px;
 }
 
-@media (max-width: 640px) {
-	.campus-map__heading {
-		align-items: flex-start;
-		flex-direction: column;
-		gap: 0.35rem;
+.runs-panel {
+	display: flex;
+	flex-direction: column;
+}
+
+.runs-heading {
+	margin-bottom: 18px;
+}
+
+.run-count {
+	display: grid;
+	width: 31px;
+	height: 31px;
+	place-items: center;
+	border-radius: 11px;
+}
+
+.run-card {
+	padding: 16px 14px 13px;
+	border: 1px solid #e2e8f0;
+	border-radius: 16px;
+}
+
+.run-card__top {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.rider-status-dot {
+	flex: 0 0 auto;
+}
+
+.rider-details {
+	min-width: 0;
+	flex: 1;
+}
+
+.rider-details h3,
+.rider-details p {
+	margin: 0;
+}
+
+.rider-details h3 {
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.rider-details p,
+.box-count span {
+	color: #64748b;
+	font-size: 11px;
+	font-weight: 400;
+}
+
+.box-count {
+	white-space: nowrap;
+	font-size: 14px;
+}
+
+.run-metrics {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin: 17px 0 12px;
+	color: #64748b;
+	font-size: 11px;
+}
+
+.run-metrics span span {
+	margin-right: 3px;
+}
+
+.stop-list {
+	display: grid;
+	gap: 7px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.stop-list li {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	color: #334155;
+	font-size: 12px;
+}
+
+.stop-number {
+	display: grid;
+	width: 20px;
+	height: 20px;
+	flex: 0 0 auto;
+	place-items: center;
+	border-radius: 7px;
+	background: #eff6ff;
+	color: #1d4ed8;
+	font-size: 10px;
+	font-weight: 700;
+}
+
+.rider-link {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 16px;
+	padding: 15px 13px;
+	border-radius: 16px;
+	background: #eff6ff;
+	color: #1e40af;
+	text-decoration: none;
+	transition: background-color 160ms ease;
+}
+
+.rider-link:hover {
+	background: #dbeafe;
+}
+
+.rider-link__icon {
+	display: grid;
+	width: 39px;
+	height: 39px;
+	flex: 0 0 auto;
+	place-items: center;
+	border-radius: 12px;
+	background: #fff;
+	font-size: 19px;
+}
+
+.rider-link__copy {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+	flex: 1;
+}
+
+.rider-link__copy strong {
+	font-size: 13px;
+}
+
+.rider-link__copy small {
+	color: #64748b;
+	font-size: 11px;
+}
+
+.rider-link__arrow {
+	font-size: 18px;
+}
+
+@media (max-width: 850px) {
+	.route-dashboard {
+		grid-template-columns: minmax(0, 1fr);
 	}
 
-	.campus-map__frame {
-		height: 300px;
+	.route-map {
+		height: 400px;
+	}
+}
+
+@media (max-width: 520px) {
+	.map-panel,
+	.runs-panel {
+		padding: 15px;
+		border-radius: 16px;
+	}
+
+	.route-map {
+		height: 330px;
+	}
+
+	.run-metrics {
+		font-size: 10px;
 	}
 }
