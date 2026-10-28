@@ -25,7 +25,13 @@
       </ng-template>
     </div>
 
-
+    <div class="save-action-container" style="margin: 20px 0; display: flex; justify-content: flex-end;">
+      <button type="button" class="btn-save-routes" (click)="saveRoutesToDatabase()"
+        [disabled]="isSaving || optimizedRiders.length === 0"
+        style="padding: 12px 20px; background-color: #2b9348; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        {{ isSaving ? 'กำลังบันทึกข้อมูล...' : '💾 บันทึกเส้นทางลงฐานข้อมูล' }}
+      </button>
+    </div>
   </section>
   <div class="rider-management-section">
     <!-- ปุ่มกดเปิด/ปิดฟอร์มเพิ่มไรเดอร์ -->
@@ -34,13 +40,7 @@
       <span aria-hidden="true">+</span> {{ showAddRiderForm ? 'ปิดฟอร์ม' : 'เพิ่มไรเดอร์' }}
     </button>
 
-    <div class="save-action-container" style="margin: 20px 0; display: flex; justify-content: flex-end;">
-      <button type="button" class="btn-save-routes" (click)="saveRoutesToDatabase()"
-        [disabled]="isSaving || optimizedRiders.length === 0"
-        style="padding: 12px 20px; background-color: #2b9348; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-        {{ isSaving ? 'กำลังบันทึกข้อมูล...' : '💾 บันทึกเส้นทางลงฐานข้อมูล' }}
-      </button>
-    </div>
+
 
     <!-- 🟢 การ์ดสรุปการเงินภาพรวมทั้งร้าน -->
     <div class="store-summary-card"

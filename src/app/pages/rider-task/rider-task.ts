@@ -29,6 +29,8 @@ export class RiderTask implements OnInit, AfterViewInit, OnDestroy {
   tasks: any[] = [];
   isLoadingTasks = false;
   taskLoadError = '';
+  updatingOrderIds = new Set<number>();
+  taskActionErrors: Record<number, string> = {};
 
   ngOnInit(): void {
     const savedRider = localStorage.getItem(this.storageKey);
@@ -123,6 +125,32 @@ export class RiderTask implements OnInit, AfterViewInit, OnDestroy {
     if (this.loggedInRider) {
       this.fetchRiderTasks(this.loggedInRider.rider_id);
     }
+  }
+
+  markTaskDelivered(task: any): void {
+    const orderId = Number(task.order_id);
+    const riderId = Number(this.loggedInRider?.rider_id);
+    if (!Number.isInteger(orderId) || !Number.isInteger(riderId) || this.updatingOrderIds.has(orderId)) return;
+
+    this.updatingOrderIds.add(orderId);
+    delete this.taskActionErrors[orderId];
+    this.http.put(`https://project-adv-webx.vercel.app/api/riders/${riderId}/tasks/${orderId}/delivered`, {}).pipe(
+      timeout({ first: 10000 })
+    ).subscribe({
+      next: () => {
+        this.tasks = this.tasks.filter(item => Number(item.order_id) !== orderId);
+        this.updatingOrderIds.delete(orderId);
+        this.cdr.detectChanges();
+        setTimeout(() => this.initializeMap(), 100);
+      },
+      error: (err) => {
+        this.updatingOrderIds.delete(orderId);
+        this.taskActionErrors[orderId] = err.name === 'TimeoutError'
+          ? 'ระบบใช้เวลาตอบกลับนาน กดปุ่มอีกครั้งเพื่อตรวจสอบสถานะ'
+          : err.error?.error || 'อัปเดตสถานะจัดส่งไม่สำเร็จ กรุณาลองอีกครั้ง';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private initializeMap(): void {

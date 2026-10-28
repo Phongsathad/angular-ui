@@ -62,7 +62,17 @@
           <p>📞 โทร: {{ task.phone || 'ไม่ระบุ' }}</p>
           <p>📦 จำนวน: {{ task.box_count }} กล่อง | กำหนดส่ง: {{ task.deadline || '-' }}</p>
           <p *ngIf="task.address_note" class="address-note">📝 หมายเหตุ: {{ task.address_note }}</p>
+          <p *ngIf="taskActionErrors[task.order_id]" class="task-action-error" role="alert">
+            {{ taskActionErrors[task.order_id] }}
+          </p>
         </div>
+        <button
+          type="button"
+          class="btn-delivered"
+          [disabled]="updatingOrderIds.has(task.order_id)"
+          (click)="markTaskDelivered(task)">
+          {{ updatingOrderIds.has(task.order_id) ? 'กำลังบันทึก...' : 'จัดส่งแล้ว' }}
+        </button>
       </div>
     </div>
   </div>
