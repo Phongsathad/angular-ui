@@ -24,6 +24,10 @@ export class RouteOptimization {
   storeLat = 13.7456;
   storeLng = 100.5342;
 
+  // 📌 เพิ่ม 2 ตัวแปรที่ HTML ฟ้องว่าขาดไป
+  totalBoxes: number = 0;
+  totalProfit: number = 0;
+
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
