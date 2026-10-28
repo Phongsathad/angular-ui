@@ -1,49 +1,39 @@
 <main class="mobile-container">
   <header class="rider-header">
     <div>
-      <p class="eyebrow">ระบบตรวจสอบใบงานจัดส่ง</p>
-
-      <!-- Dropdown เลือกไรเดอร์ -->
-      <div class="rider-selector" style="margin-top: 6px;">
-        <label for="riderSelect" style="font-size: 13px; color: #64748b; margin-right: 8px;">เลือกไรเดอร์:</label>
-        <select id="riderSelect" [(ngModel)]="selectedRiderId" (change)="onRiderChange()"
-          style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 600;">
-          <option *ngFor="let r of riders" [value]="r.rider_id || r.id">{{ r.rider_name || r.name }}</option>
-        </select>
-      </div>
+      <p class="eyebrow">ใบงานจัดส่งประจำวัน</p>
+      <h1>สวัสดี, {{ riderName }}</h1>
     </div>
     <a routerLink="/route-optimization" class="back-link">กลับหน้าแอดมิน</a>
   </header>
 
-  <!-- ส่วนแสดงผลรายการงานตามโค้ดเดิม -->
   <section class="task-summary">
-    <div class="badge">จุดส่งของ {{ riderName }}: <strong>{{ tasks.length }} จุด</strong></div>
+    <div class="badge">จุดส่งทั้งหมด: <strong>{{ tasks.length }} จุด</strong></div>
   </section>
 
   <div *ngIf="loading" class="loading-text">กำลังโหลดใบงาน...</div>
 
   <div *ngIf="!loading && tasks.length === 0" class="empty-state">
-    <p>🎉 ไรเดอร์คนนี้ยังไม่มีออเดอร์ค้างส่งในขณะนี้</p>
+    <p>🎉 เยี่ยมมาก! วันนี้ยังไม่มีออเดอร์ค้างส่งสำหรับคุณ</p>
   </div>
 
   <div class="task-list">
     <article class="task-card" *ngFor="let task of tasks">
-      <!-- รายการการ์ดใบงาน -->
       <div class="task-card__header">
         <span class="stop-badge">จุดที่ {{ task.stop_seq }}</span>
         <span class="box-tag">{{ task.box_count }} กล่อง</span>
       </div>
 
       <div class="task-card__body">
-        <h3>{{ task.first_name }}</h3>
-        <p class="phone">📞 <a [href]="'tel:' + task.phone">{{ task.phone }}</a></p>
+        <h3>{{ task.first_name }} {{ task.last_name }}</h3>
+        <p class="phone" *ngIf="task.phone">📞 <a [href]="'tel:' + task.phone">โทร: {{ task.phone }}</a></p>
         <p class="note" *ngIf="task.address_note">📝 โน้ต: {{ task.address_note }}</p>
-        <p class="deadline">⏰ ส่งก่อน: {{ task.deadline }}</p>
+        <p class="deadline" *ngIf="task.deadline">⏰ ส่งก่อน: {{ task.deadline }}</p>
       </div>
 
       <div class="task-card__actions">
         <button class="btn-map" (click)="openGoogleMaps(task.lat, task.lng)">
-          📍 นำทาง (Google Maps)
+          📍 นำทาง
         </button>
         <button class="btn-done" (click)="markAsDelivered(task.stop_id)">
           ✅ ส่งสำเร็จ

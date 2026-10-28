@@ -10,11 +10,72 @@
 
     <div #routeMap class="route-map" role="application" aria-label="แผนที่เส้นทางจัดส่ง"></div>
 
-    <div class="map-legend" *ngIf="assignments.length > 0">
-      <span class="legend-dot"></span>
-      <span>{{ assignments[0]?.riderName }} · {{ assignments[0]?.totalBoxes }} กล่อง</span>
+    <div class="map-legend">
+      <ng-container *ngIf="assignments.length > 0; else loadingTemplate">
+        <div class="legend-item" *ngFor="let item of assignments">
+          <span class="legend-dot" [style.background-color]="item.color"></span>
+          <span>{{ item.riderName }} · {{ item.totalBoxes }} กล่อง</span>
+        </div>
+      </ng-container>
+
+      <ng-template #loadingTemplate>
+        <div class="legend-item">
+          <span>กำลังโหลดข้อมูลแผนที่...</span>
+        </div>
+      </ng-template>
     </div>
+
+
   </section>
+  <div class="rider-management-section">
+    <!-- ปุ่มกดเปิด/ปิดฟอร์มเพิ่มไรเดอร์ -->
+    <button class="add-rider-button" type="button" (click)="showAddRiderForm = !showAddRiderForm"
+      [attr.aria-expanded]="showAddRiderForm">
+      <span aria-hidden="true">+</span> {{ showAddRiderForm ? 'ปิดฟอร์ม' : 'เพิ่มไรเดอร์' }}
+    </button>
+
+    <!-- ฟอร์มกรอกข้อมูลไรเดอร์ใหม่ -->
+    <form *ngIf="showAddRiderForm" class="add-rider-form" (ngSubmit)="addRider()">
+      <h2>ข้อมูลไรเดอร์ใหม่</h2>
+      <p *ngIf="riderFormError" class="add-rider-form__error" role="alert">{{ riderFormError }}</p>
+
+      <div class="add-rider-form__fields">
+        <label>
+          ชื่อไรเดอร์
+          <input name="name" [(ngModel)]="newRider.name" autocomplete="name" placeholder="ระบุชื่อ-นามสกุล" required />
+        </label>
+
+        <label>
+          เบอร์โทรศัพท์
+          <input name="phone" [(ngModel)]="newRider.phone" autocomplete="tel" placeholder="08XXXXXXXX" required />
+        </label>
+
+        <label>
+          ชื่อผู้ใช้ (Username)
+          <input name="username" [(ngModel)]="newRider.username" autocomplete="username"
+            placeholder="ชื่อสำหรับเข้าสู่ระบบ" required />
+        </label>
+
+        <label>
+          รหัสผ่าน (Password)
+          <input name="password" [(ngModel)]="newRider.password" type="password" autocomplete="new-password"
+            placeholder="••••••••" required />
+        </label>
+
+        <label>
+          ความจุสูงสุด (กล่อง)
+          <input name="capacity" [(ngModel)]="newRider.capacity" type="number" min="1" required />
+        </label>
+      </div>
+
+      <div class="add-rider-form__actions">
+        <button type="button" class="add-rider-cancel" (click)="showAddRiderForm = false">ยกเลิก</button>
+        <button type="submit" class="add-rider-submit" [disabled]="isSavingRider">
+          {{ isSavingRider ? 'กำลังบันทึก...' : 'บันทึกไรเดอร์' }}
+        </button>
+      </div>
+    </form>
+  </div>
 
   <aside class="runs-panel" aria-labelledby="runs-title">
     <header class="panel-heading runs-heading">
@@ -25,40 +86,39 @@
       <span class="run-count">{{ assignments.length }}</span>
     </header>
 
-    <!-- การ์ดแสดงผลงานของไรเดอร์แต่ละคน -->
-    <article class="run-card" *ngFor="let assign of assignments" [style.border-left]="'6px solid ' + assign.color">
-      <div class="run-card__top">
-        <span class="rider-status-dot" [style.background-color]="assign.color"></span>
-        <div class="rider-details">
-          <h3>{{ assign.riderName }}</h3>
-          <p>ไรเดอร์ประจำรอบนี้</p>
+    <div class="runs-list" aria-label="รายการงานของไรเดอร์">
+      <!-- การ์ดแสดงผลงานของไรเดอร์แต่ละคน -->
+      <article class="run-card" *ngFor="let assign of assignments" [style.border-left]="'6px solid ' + assign.color">
+        <div class="run-card__top">
+          <span class="rider-status-dot" [style.background-color]="assign.color"></span>
+          <div class="rider-details">
+            <h3>{{ assign.riderName }}</h3>
+            <p>ไรเดอร์ประจำรอบนี้</p>
+          </div>
+          <strong class="box-count">{{ assign.totalBoxes }} <span>กล่อง</span></strong>
         </div>
-        <strong class="box-count">{{ assign.totalBoxes }} <span>กล่อง</span></strong>
-      </div>
 
-      <div class="run-metrics">
-        <span><span aria-hidden="true">↗</span> {{ assign.totalDistance }} กม.</span>
-        <span><span aria-hidden="true">◷</span> {{ assign.duration }} นาที</span>
-        <span><span aria-hidden="true">⇵</span> {{ assign.totalOrders }} จุด</span>
-      </div>
+        <div class="run-metrics">
+          <span><span aria-hidden="true">↗</span> {{ assign.totalDistance }} กม.</span>
+          <span><span aria-hidden="true">◷</span> {{ assign.duration }} นาที</span>
+          <span><span aria-hidden="true">⇵</span> {{ assign.totalOrders }} จุด</span>
+        </div>
 
-      <ol class="stop-list">
-        <li *ngFor="let order of assign.orders; let index = index">
-          <span class="stop-number" [style.background-color]="assign.color" style="color: white;">{{ index + 1 }}</span>
-          <span>{{ order }}</span>
-        </li>
-      </ol>
-    </article>
+        <ol class="stop-list">
+          <li *ngFor="let order of assign.orders; let index = index">
+            <span class="stop-number" [style.background-color]="assign.color" style="color: white;">{{ index + 1
+              }}</span>
+            <span>{{ order }}</span>
+          </li>
+        </ol>
+      </article>
+
+      <p *ngIf="assignments.length === 0" class="runs-empty">ยังไม่มีงานของไรเดอร์</p>
+    </div>
 
     <!-- ลบหรือย้าย router-outlet ออกหากทำให้หน้าจอทับซ้อนกัน -->
     <!-- <router-outlet></router-outlet> -->
 
-    <a class="rider-link" routerLink="/rider-task">
-      <span class="rider-link__icon" aria-hidden="true">♙</span>
-      <span class="rider-link__copy">
-        <strong>แสดงไรเดอร์</strong>
-      </span>
-      <span class="rider-link__arrow" aria-hidden="true">→</span>
-    </a>
+
   </aside>
 </main>

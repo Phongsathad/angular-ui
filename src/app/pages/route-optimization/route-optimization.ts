@@ -1,9 +1,11 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+
 
 interface OptimizationResult {
   riderId: number;
@@ -53,7 +55,7 @@ interface OsrmRouteResponse {
 @Component({
   selector: 'app-route-optimization',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet],
+  imports: [CommonModule, FormsModule],
   templateUrl: './route-optimization.html',
   styleUrl: './route-optimization.css'
 })
@@ -76,9 +78,20 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
   assignments: OptimizationResult[] = [];
   optimizedRiders: RiderRoute[] = [];
   selectedRiderId: number | null = null;
+  showAddRiderForm = false;
+  isSavingRider = false;
+  riderFormError = '';
+  newRider = { name: '', phone: '', username: '', password: '', capacity: 10 };
 
   // สีประจำตัวไรเดอร์แต่ละคัน
-  private readonly riderColors = ['#d62828', '#0077b6', '#2a9d8f', '#f77f00', '#6a4c93'];
+  private readonly riderColors = [
+  '#d62828', '#0077b6', '#2a9d8f', '#f77f00', '#6a4c93', // 1-5
+  '#e76f51', '#264653', '#e9c46a', '#43aa8b', '#f8961e', // 6-10
+  '#577590', '#f3722c', '#4d908e', '#90be6d', '#f9844a', // 11-15
+  '#b5179e', '#7209b7', '#4361ee', '#4cc9f0', '#3a0ca3', // 16-20
+  '#ff006e', '#fb8500', '#8338ec', '#023e8a', '#0096c7', // 21-25
+  '#52b788', '#d90429', '#ef233c', '#8d99ae', '#2b2d42'  // 26-30
+];
 
   ngOnInit(): void {
     const savedRiderId = localStorage.getItem(this.selectedRiderStorageKey);
@@ -327,6 +340,45 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
     this.assignments = [];
     this.totalBoxes = 0;
     this.riderRouteLayers.clear();
+  }
+
+  addRider(): void {
+    const { name, phone, username, password, capacity } = this.newRider;
+    if (!name.trim() || !phone.trim() || !username.trim() || !password || capacity < 1) {
+      this.riderFormError = 'กรุณากรอกข้อมูลให้ครบ และระบุความจุมากกว่า 0';
+      return;
+    }
+
+    this.riderFormError = '';
+    this.isSavingRider = true;
+    
+    this.http.post('https://project-adv-webx.vercel.app/api/riders', {
+      name: name.trim(),
+      phone: phone.trim(),
+      username: username.trim(),
+      password,
+      capacity,
+      is_active: 1,
+    }).pipe(
+      finalize(() => {
+        this.isSavingRider = false; // 👈 บังคับปลดล็อกปุ่มเสมอไม่ว่าจะสำเร็จหรือพัง
+      })
+    ).subscribe({
+      next: () => {
+        this.showAddRiderForm = false;
+        this.riderFormError = '';
+        this.newRider = { name: '', phone: '', username: '', password: '', capacity: 10 };
+        this.routeStatus = 'เพิ่มไรเดอร์สำเร็จ กำลังจัดสรรเส้นทางใหม่...';
+        this.fetchAndOptimizeRoutes(); // โหลดข้อมูลใหม่และแสดงผลฝั่งขวาอัตโนมัติ
+      },
+      error: (error) => {
+        console.error('ไม่สามารถเพิ่มไรเดอร์ได้', error);
+        const apiMessage = error.error?.error;
+        this.riderFormError = typeof apiMessage === 'string'
+          ? apiMessage
+          : 'เพิ่มไรเดอร์ไม่สำเร็จ กรุณาตรวจสอบข้อมูลและลองอีกครั้ง';
+      },
+    });
   }
 
   toggleRiderRoute(riderId: number): void {

@@ -94,6 +94,115 @@
 	font-size: 12px;
 }
 
+.add-rider-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 42px;
+	margin-top: 16px;
+	padding: 0 16px;
+	border: 0;
+	border-radius: 8px;
+	background: #166534;
+	color: #fff;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.add-rider-button:hover,
+.add-rider-submit:hover {
+	background: #14532d;
+}
+
+.add-rider-button span {
+	font-size: 20px;
+	line-height: 1;
+}
+
+.add-rider-form {
+	margin-top: 14px;
+	padding: 16px;
+	border: 1px solid #dbe3eb;
+	border-radius: 10px;
+	background: #f8fafc;
+}
+
+.add-rider-form h2 {
+	margin: 0 0 12px;
+	color: #0f172a;
+	font-size: 14px;
+}
+
+.add-rider-form__error {
+	margin: 0 0 12px;
+	color: #b91c1c;
+	font-size: 12px;
+}
+
+.add-rider-form__fields {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.add-rider-form label {
+	display: grid;
+	gap: 5px;
+	color: #475569;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.add-rider-form input {
+	width: 100%;
+	min-height: 38px;
+	padding: 7px 9px;
+	border: 1px solid #cbd5e1;
+	border-radius: 6px;
+	background: #fff;
+	color: #0f172a;
+	font: inherit;
+	font-size: 13px;
+}
+
+.add-rider-form__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 14px;
+}
+
+.add-rider-cancel,
+.add-rider-submit {
+	min-height: 38px;
+	padding: 0 13px;
+	border-radius: 7px;
+	font: inherit;
+	font-size: 12px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.add-rider-cancel {
+	border: 1px solid #cbd5e1;
+	background: #fff;
+	color: #475569;
+}
+
+.add-rider-submit {
+	border: 0;
+	background: #166534;
+	color: #fff;
+}
+
+.add-rider-submit:disabled {
+	cursor: wait;
+	opacity: 0.6;
+}
+
 .legend-item {
 	display: inline-flex;
 	align-items: center;
@@ -126,6 +235,7 @@
 .runs-panel {
 	display: flex;
 	flex-direction: column;
+	max-height: min(680px, calc(100vh - 180px));
 }
 
 .runs-heading {
@@ -138,6 +248,21 @@
 	height: 31px;
 	place-items: center;
 	border-radius: 11px;
+}
+
+.runs-list {
+	display: grid;
+	flex: 1 1 auto;
+	gap: 12px;
+	min-height: 0;
+	overflow-y: auto;
+	padding-right: 4px;
+}
+
+.runs-empty {
+	margin: 0;
+	color: #64748b;
+	font-size: 13px;
 }
 
 .run-card {
@@ -301,5 +426,9 @@
 
 	.run-metrics {
 		font-size: 10px;
+	}
+
+	.add-rider-form__fields {
+		grid-template-columns: minmax(0, 1fr);
 	}
 }

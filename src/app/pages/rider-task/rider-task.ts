@@ -2,7 +2,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 
 interface DeliveryTask {
   stop_id: number;
@@ -12,6 +11,7 @@ interface DeliveryTask {
   box_count: number;
   deadline: string;
   first_name: string;
+  last_name: string;
   phone: string;
   lat: number;
   lng: number;
@@ -21,56 +21,24 @@ interface DeliveryTask {
 @Component({
   selector: 'app-rider-task',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './rider-task.html',
   styleUrl: './rider-task.css'
 })
 export class RiderTask implements OnInit {
   private http = inject(HttpClient);
   
-  riders: any[] = [];
-  selectedRiderId: any = null;
-  riderName: string = 'เลือกไรเดอร์';
-
+  riderId = 1; // สามารถปรับเปลี่ยนตามระบบล็อกอินจริงของไรเดอร์
+  riderName = 'สมศักดิ์ รุ่งไว';
   tasks: DeliveryTask[] = [];
-  loading = false;
+  loading = true;
 
   ngOnInit(): void {
-    this.fetchRiders();
-  }
-
-  fetchRiders(): void {
-    const url = `https://project-adv-webx.vercel.app/api/riders`;
-    this.http.get<any[]>(url).subscribe({
-      next: (data) => {
-        console.log('Riders loaded:', data);
-        this.riders = data;
-        if (this.riders.length > 0) {
-          // รองรับทั้งฟิลด์ id / rider_id และ name / rider_name
-          const first = this.riders[0];
-          this.selectedRiderId = first.rider_id || first.id;
-          this.riderName = first.rider_name || first.name;
-          this.fetchRiderTasks();
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load riders', err);
-      }
-    });
-  }
-
-  onRiderChange(): void {
-    const currentRider = this.riders.find(r => (r.rider_id || r.id) == this.selectedRiderId);
-    if (currentRider) {
-      this.riderName = currentRider.rider_name || currentRider.name;
-    }
     this.fetchRiderTasks();
   }
 
   fetchRiderTasks(): void {
-    if (!this.selectedRiderId) return;
-    this.loading = true;
-    const url = `https://project-adv-webx.vercel.app/api/riders/${this.selectedRiderId}/tasks`;
+    const url = `https://project-adv-webx.vercel.app/api/riders/${this.riderId}/tasks`;
     this.http.get<DeliveryTask[]>(url).subscribe({
       next: (data) => {
         this.tasks = data;
@@ -78,26 +46,28 @@ export class RiderTask implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load tasks', err);
-        this.tasks = [];
         this.loading = false;
       }
     });
   }
 
+  // เปิด Google Maps นำทางไปยังพิกัดลูกค้า
   openGoogleMaps(lat: number, lng: number): void {
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
     window.open(mapsUrl, '_blank');
   }
 
+  // กดอัปเดตสถานะจุดส่งเป็นส่งสำเร็จ
   markAsDelivered(stopId: number): void {
     const updateUrl = `https://project-adv-webx.vercel.app/api/route-stops/${stopId}/deliver`;
     this.http.put(updateUrl, {}).subscribe({
       next: () => {
         alert('บันทึกการจัดส่งสำเร็จ!');
-        this.fetchRiderTasks(); 
+        this.fetchRiderTasks(); // โหลดรายการงานใหม่
       },
       error: (err) => {
         console.error('Update status failed', err);
+        alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
       }
     });
   }
