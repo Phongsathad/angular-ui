@@ -1,74 +1,136 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, AfterViewInit, Component, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
-
-interface DeliveryTask {
-  stop_id: number;
-  stop_seq: number;
-  stop_status: string;
-  order_id: number;
-  box_count: number;
-  deadline: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  lat: number;
-  lng: number;
-  address_note: string;
-}
+import * as L from 'leaflet';
 
 @Component({
-  selector: 'app-rider-task',
+  selector: 'app-riders-task',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './rider-task.html',
   styleUrl: './rider-task.css'
 })
-export class RiderTask implements OnInit {
+export class RiderTask implements OnInit, AfterViewInit {
   private http = inject(HttpClient);
-  
-  riderId = 1; // สามารถปรับเปลี่ยนตามระบบล็อกอินจริงของไรเดอร์
-  riderName = 'สมศักดิ์ รุ่งไว';
-  tasks: DeliveryTask[] = [];
-  loading = true;
+  private mapElement = viewChild('riderMap', { read: ElementRef });
+  private map?: L.Map;
+
+  private readonly storageKey = 'current-logged-in-rider';
+  private cdr = inject(ChangeDetectorRef);
+
+  loggedInRider: any = null;
+  loginData = { username: '', password: '' };
+  isLoggingIn = false;
+  loginError = '';
+
+  tasks: any[] = [];
 
   ngOnInit(): void {
-    this.fetchRiderTasks();
+    const savedRider = localStorage.getItem(this.storageKey);
+    if (savedRider) {
+      this.loggedInRider = JSON.parse(savedRider);
+      this.fetchRiderTasks(this.loggedInRider.rider_id);
+    }
   }
 
-  fetchRiderTasks(): void {
-    const url = `https://project-adv-webx.vercel.app/api/riders/${this.riderId}/tasks`;
-    this.http.get<DeliveryTask[]>(url).subscribe({
-      next: (data) => {
-        this.tasks = data;
-        this.loading = false;
+  ngAfterViewInit(): void {
+    if (this.loggedInRider && this.tasks.length > 0) {
+      setTimeout(() => this.initializeMap(), 100);
+    }
+  }
+
+  loginRider(): void {
+    const { username, password } = this.loginData;
+    if (!username.trim() || !password) {
+      this.loginError = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน';
+      return;
+    }
+
+    this.loginError = '';
+    this.isLoggingIn = true;
+    this.cdr.detectChanges(); // 👈 บังคับอัปเดตปุ่มเป็นสถานะกำลังโหลด
+
+    this.http.post('https://project-adv-webx.vercel.app/api/riders/login', {
+      username: username.trim(),
+      password
+    }).subscribe({
+      next: (res: any) => {
+        this.isLoggingIn = false;
+        this.loggedInRider = res.rider;
+        localStorage.setItem(this.storageKey, JSON.stringify(res.rider));
+        this.loginData = { username: '', password: '' };
+        
+        this.cdr.detectChanges(); // 👈 บังคับอัปเดต UI ให้เปลี่ยนข้ามไปหน้าแดชบอร์ดทันที
+        this.fetchRiderTasks(res.rider.rider_id);
       },
       error: (err) => {
-        console.error('Failed to load tasks', err);
-        this.loading = false;
+        this.isLoggingIn = false;
+        this.loginError = err.error?.error || 'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบข้อมูลอีกครั้ง';
+        this.cdr.detectChanges(); // 👈 บังคับแสดงข้อความแจ้งเตือนเมื่อเกิด Error
       }
     });
   }
 
-  // เปิด Google Maps นำทางไปยังพิกัดลูกค้า
-  openGoogleMaps(lat: number, lng: number): void {
-    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-    window.open(mapsUrl, '_blank');
+  logout(): void {
+    this.loggedInRider = null;
+    this.tasks = [];
+    localStorage.removeItem(this.storageKey);
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
   }
 
-  // กดอัปเดตสถานะจุดส่งเป็นส่งสำเร็จ
-  markAsDelivered(stopId: number): void {
-    const updateUrl = `https://project-adv-webx.vercel.app/api/route-stops/${stopId}/deliver`;
-    this.http.put(updateUrl, {}).subscribe({
-      next: () => {
-        alert('บันทึกการจัดส่งสำเร็จ!');
-        this.fetchRiderTasks(); // โหลดรายการงานใหม่
+  private fetchRiderTasks(riderId: number): void {
+    this.http.get<any[]>(`https://project-adv-webx.vercel.app/api/riders/${riderId}/tasks`).subscribe({
+      next: (tasks) => {
+        this.tasks = tasks || [];
+        setTimeout(() => this.initializeMap(), 100);
       },
       error: (err) => {
-        console.error('Update status failed', err);
-        alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+        console.error('ไม่สามารถโหลดข้อมูลงานของไรเดอร์ได้', err);
       }
     });
+  }
+
+  private initializeMap(): void {
+    const element = this.mapElement()?.nativeElement;
+    if (!element) return;
+
+    if (this.map) {
+      this.map.remove();
+    }
+
+    const map = L.map(element, { scrollWheelZoom: false });
+    this.map = map;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+
+    let allLatLngs: L.LatLngExpression[] = [[16.2470296, 103.2505615]]; // พิกัดร้านค้าเริ่มต้น
+
+    this.tasks.forEach((task, index) => {
+      if (task.lat && task.lng) {
+        const lat = Number(task.lat);
+        const lng = Number(task.lng);
+        allLatLngs.push([lat, lng]);
+
+        L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: '',
+            html: `<span style="display:grid;place-items:center;width:32px;height:32px;border:3px solid #fff;border-radius:50%;background:#0077b6;color:#fff;font:700 13px/1 sans-serif;box-shadow:0 2px 6px #0004">${task.stop_seq || (index + 1)}</span>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+          }),
+        }).addTo(map).bindTooltip(`<b>${task.first_name} ${task.last_name || ''}</b><br>📦 ${task.box_count} กล่อง`);
+      }
+    });
+
+    if (allLatLngs.length > 1) {
+      map.fitBounds(L.latLngBounds(allLatLngs), { padding: [40, 40] });
+    }
   }
 }

@@ -34,6 +34,29 @@
       <span aria-hidden="true">+</span> {{ showAddRiderForm ? 'ปิดฟอร์ม' : 'เพิ่มไรเดอร์' }}
     </button>
 
+    <!-- 🟢 การ์ดสรุปการเงินภาพรวมทั้งร้าน -->
+    <div class="store-summary-card"
+      style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-top: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+      <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #1e293b; font-weight: 700;">📊 สรุปการเงินทั้งร้านวันนี้
+      </h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; font-size: 12px;">
+        <div style="background: #f8fafc; padding: 8px 10px; border-radius: 8px;">
+          <span style="color: #64748b; font-size: 11px; display: block;">📦 ขายได้รวม</span>
+          <strong style="color: #334155; font-size: 15px;">฿{{ totalRevenue | number:'1.2-2' }}</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 8px 10px; border-radius: 8px;">
+          <span style="color: #64748b; font-size: 11px; display: block;">🛵 ค่าไรเดอร์รวม</span>
+          <strong style="color: #d62828; font-size: 15px;">-฿{{ totalDeliveryCost | number:'1.2-2' }}</strong>
+        </div>
+      </div>
+
+      <div style="padding-top: 10px; border-top: 1px solid #f1f5f9;">
+        <span style="font-size: 12px; color: #64748b; display: block;">💰 กำไรสุทธิรวมคงเหลือ</span>
+        <strong style="font-size: 24px; color: #2a9d8f;">฿{{ totalProfit | number:'1.2-2' }}</strong>
+      </div>
+    </div>
+
     <!-- ฟอร์มกรอกข้อมูลไรเดอร์ใหม่ -->
     <form *ngIf="showAddRiderForm" class="add-rider-form" (ngSubmit)="addRider()">
       <h2>ข้อมูลไรเดอร์ใหม่</h2>
@@ -76,7 +99,6 @@
       </div>
     </form>
   </div>
-
   <aside class="runs-panel" aria-labelledby="runs-title">
     <header class="panel-heading runs-heading">
       <div>
@@ -98,10 +120,21 @@
           <strong class="box-count">{{ assign.totalBoxes }} <span>กล่อง</span></strong>
         </div>
 
-        <div class="run-metrics">
+        <div class="run-metrics" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
           <span><span aria-hidden="true">↗</span> {{ assign.totalDistance }} กม.</span>
           <span><span aria-hidden="true">◷</span> {{ assign.duration }} นาที</span>
           <span><span aria-hidden="true">⇵</span> {{ assign.totalOrders }} จุด</span>
+
+          <!-- 🟢 กล่องแจกแจงการเงิน 3 ข้อ (รายรับขายสินค้า - ค่าไรเดอร์ = กำไรสุทธิ) -->
+          <div
+            style="margin-left: auto; display: flex; gap: 10px; font-size: 12px; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <span style="color: #334155;">📦 ขายได้: <strong>฿{{ assign.revenue | number:'1.2-2' }}</strong></span>
+            <span style="color: #d62828;">🛵 ค่าไรเดอร์: <strong>-฿{{ assign.deliveryCost | number:'1.2-2'
+                }}</strong></span>
+            <span [style.color]="assign.profit >= 0 ? '#2a9d8f' : '#d62828'">
+              <strong>💰 คงเหลือ: ฿{{ assign.profit | number:'1.2-2' }}</strong>
+            </span>
+          </div>
         </div>
 
         <ol class="stop-list">
@@ -115,10 +148,5 @@
 
       <p *ngIf="assignments.length === 0" class="runs-empty">ยังไม่มีงานของไรเดอร์</p>
     </div>
-
-    <!-- ลบหรือย้าย router-outlet ออกหากทำให้หน้าจอทับซ้อนกัน -->
-    <!-- <router-outlet></router-outlet> -->
-
-
   </aside>
 </main>

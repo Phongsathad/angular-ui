@@ -1,206 +1,224 @@
-/* คอนเทนเนอร์หลักสำหรับมือถือ */
-.mobile-container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 16px;
-  background-color: #f8fafc;
+.rider-task-container {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: #1e293b;
+  background-color: #f8f9fa;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #333;
+  padding: 16px;
   box-sizing: border-box;
 }
 
-/* ส่วนหัวของหน้า (Header) */
-.rider-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
+.login-card {
+  max-width: 400px;
+  width: 100%;
+  margin: auto;
   background: #ffffff;
-  padding: 20px;
+  padding: 32px;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
 }
 
-.eyebrow {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0 0 4px 0;
-  font-weight: 500;
-}
-
-.rider-header h1 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-}
-
-.back-link {
-  font-size: 13px;
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 600;
-  background: #eff6ff;
-  padding: 6px 12px;
-  border-radius: 20px;
-  transition: background 0.2s;
-}
-
-.back-link:hover {
-  background: #dbeafe;
-}
-
-/* สรุปจำนวนจุดส่ง */
-.task-summary {
-  margin-bottom: 16px;
-}
-
-.badge {
-  background: #0f172a;
-  color: #ffffff;
-  padding: 10px 16px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  display: inline-block;
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
-}
-
-/* ข้อความสถานะโหลด / ไม่มีงาน */
-.loading-text, .empty-state {
+.login-card h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 24px;
+  color: #1a1a1a;
   text-align: center;
-  padding: 40px 20px;
-  color: #64748b;
-  font-size: 15px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-/* การ์ดใบงาน (Task Card) */
-.task-list {
+.login-subtitle {
+  text-align: center;
+  color: #6c757d;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #842029;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+  border: 1px solid #f5c2c7;
+}
+
+.login-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.task-card {
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.login-form input {
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-form input:focus {
+  border-color: #0077b6;
+  box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15);
+}
+
+.btn-submit {
+  margin-top: 8px;
+  padding: 12px;
+  background-color: #0077b6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background-color: #023e8a;
+}
+
+.btn-submit:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.dashboard-content {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rider-header {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.task-card:active {
-  transform: scale(0.99);
-}
-
-/* ส่วนหัวของการ์ด (ลำดับจุด และจำนวนกล่อง) */
-.task-card__header {
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f1f5f9;
 }
 
-.stop-badge {
-  background: #3b82f6;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-.box-tag {
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-/* รายละเอียดข้างใน (Body) */
-.task-card__body h3 {
+.rider-header h2 {
+  margin: 0 0 4px 0;
   font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 8px 0;
+  color: #212529;
 }
 
-.task-card__body p {
-  margin: 6px 0;
-  font-size: 14px;
-  color: #475569;
+.rider-header p {
+  margin: 0;
+  font-size: 13px;
+  color: #6c757d;
 }
 
-.phone a {
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.phone a:hover {
-  text-decoration: underline;
-}
-
-.note {
-  background: #fffbeb;
-  color: #92400e;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px !important;
-  border-left: 3px solid #f59e0b;
-}
-
-.deadline {
-  color: #dc2626 !important;
-  font-weight: 600;
-}
-
-/* ปุ่มกดจัดการงาน (Actions) */
-.task-card__actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.btn-map, .btn-done {
-  flex: 1;
-  padding: 12px;
+.btn-logout {
+  padding: 8px 14px;
+  background-color: #dc3545;
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: #bb2d3b;
+}
+
+.task-map-section {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.rider-map {
+  width: 100%;
+  height: 300px;
+  z-index: 1;
+}
+
+.task-list-section {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.task-list-section h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #343a40;
+}
+
+.no-tasks {
+  text-align: center;
+  color: #6c757d;
+  padding: 24px;
+  font-size: 14px;
+}
+
+.task-card {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: background 0.2s, opacity 0.2s;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 14px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 10px;
 }
 
-.btn-map {
-  background: #eff6ff;
-  color: #1d4ed8;
+.task-card:last-child {
+  margin-bottom: 0;
 }
 
-.btn-map:hover {
-  background: #dbeafe;
-}
-
-.btn-done {
-  background: #22c55e;
+.task-index {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  background-color: #0077b6;
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.25);
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.btn-done:hover {
-  background: #16a34a;
+.task-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  color: #212529;
+}
+
+.task-info p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.address-note {
+  color: #d97706 !important;
+  font-weight: 500;
 }

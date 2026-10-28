@@ -1,44 +1,59 @@
-<main class="mobile-container">
-  <header class="rider-header">
-    <div>
-      <p class="eyebrow">ใบงานจัดส่งประจำวัน</p>
-      <h1>สวัสดี, {{ riderName }}</h1>
+<div class="rider-task-container">
+  
+  <!-- 1. หน้าจอเข้าสู่ระบบ -->
+  <div *ngIf="!loggedInRider" class="login-card">
+    <h2>เข้าสู่ระบบไรเดอร์</h2>
+    <p class="login-subtitle">กรุณาเข้าสู่ระบบเพื่อดูเส้นทางและจุดส่งสินค้า</p>
+    
+    <p *ngIf="loginError" class="error-message" role="alert">{{ loginError }}</p>
+
+    <form (ngSubmit)="loginRider()" class="login-form">
+      <label>
+        ชื่อผู้ใช้ (Username)
+        <input type="text" [(ngModel)]="loginData.username" name="username" placeholder="ระบุชื่อผู้ใช้" required autocomplete="username">
+      </label>
+
+      <label>
+        รหัสผ่าน (Password)
+        <input type="password" [(ngModel)]="loginData.password" name="password" placeholder="••••••••" required autocomplete="current-password">
+      </label>
+
+      <button type="submit" class="btn-submit" [disabled]="isLoggingIn">
+        {{ isLoggingIn ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ' }}
+      </button>
+    </form>
+  </div>
+
+  <!-- 2. หน้าจอแสดงงานและแผนที่ -->
+  <div *ngIf="loggedInRider" class="dashboard-content">
+    <header class="rider-header">
+      <div>
+        <h2>สวัสดี, {{ loggedInRider.name }}</h2>
+        <p>ความจุสูงสุด: {{ loggedInRider.capacity }} กล่อง</p>
+      </div>
+      <button type="button" class="btn-logout" (click)="logout()">ออกจากระบบ</button>
+    </header>
+
+    <!-- ส่วนแสดงแผนที่ Leaflet -->
+    <div class="task-map-section">
+      <div #riderMap class="rider-map"></div>
     </div>
-    <a routerLink="/route-optimization" class="back-link">กลับหน้าแอดมิน</a>
-  </header>
 
-  <section class="task-summary">
-    <div class="badge">จุดส่งทั้งหมด: <strong>{{ tasks.length }} จุด</strong></div>
-  </section>
-
-  <div *ngIf="loading" class="loading-text">กำลังโหลดใบงาน...</div>
-
-  <div *ngIf="!loading && tasks.length === 0" class="empty-state">
-    <p>🎉 เยี่ยมมาก! วันนี้ยังไม่มีออเดอร์ค้างส่งสำหรับคุณ</p>
+    <!-- รายการจุดส่งสินค้า -->
+    <div class="task-list-section">
+      <h3>รายการจุดส่งสินค้า ({{ tasks.length }} จุด)</h3>
+      <div *ngIf="tasks.length === 0" class="no-tasks">ไม่มีออเดอร์ที่ต้องจัดส่งในขณะนี้</div>
+      
+      <div class="task-card" *ngFor="let task of tasks; let i = index">
+        <span class="task-index">{{ task.stop_seq || (i + 1) }}</span>
+        <div class="task-info">
+          <h4>{{ task.first_name }} {{ task.last_name || '' }}</h4>
+          <p>📞 โทร: {{ task.phone || 'ไม่ระบุ' }}</p>
+          <p>📦 จำนวน: {{ task.box_count }} กล่อง | กำหนดส่ง: {{ task.deadline || '-' }}</p>
+          <p *ngIf="task.address_note" class="address-note">📝 หมายเหตุ: {{ task.address_note }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="task-list">
-    <article class="task-card" *ngFor="let task of tasks">
-      <div class="task-card__header">
-        <span class="stop-badge">จุดที่ {{ task.stop_seq }}</span>
-        <span class="box-tag">{{ task.box_count }} กล่อง</span>
-      </div>
-
-      <div class="task-card__body">
-        <h3>{{ task.first_name }} {{ task.last_name }}</h3>
-        <p class="phone" *ngIf="task.phone">📞 <a [href]="'tel:' + task.phone">โทร: {{ task.phone }}</a></p>
-        <p class="note" *ngIf="task.address_note">📝 โน้ต: {{ task.address_note }}</p>
-        <p class="deadline" *ngIf="task.deadline">⏰ ส่งก่อน: {{ task.deadline }}</p>
-      </div>
-
-      <div class="task-card__actions">
-        <button class="btn-map" (click)="openGoogleMaps(task.lat, task.lng)">
-          📍 นำทาง
-        </button>
-        <button class="btn-done" (click)="markAsDelivered(task.stop_id)">
-          ✅ ส่งสำเร็จ
-        </button>
-      </div>
-    </article>
-  </div>
-</main>
+</div>

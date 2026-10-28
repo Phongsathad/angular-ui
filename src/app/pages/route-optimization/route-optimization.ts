@@ -70,11 +70,13 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
 
   // พิกัดร้านค้า (จุดเริ่มต้นและสิ้นสุด)
   private readonly store = { latitude: 16.2470296, longitude: 103.2505615 };
-  
+
   routeStatus = 'กำลังโหลดข้อมูลและจัดสรรเส้นทาง...';
 
   totalBoxes = 0;
   totalProfit = 0;
+  totalRevenue = 0;
+  totalDeliveryCost = 0;
   assignments: OptimizationResult[] = [];
   optimizedRiders: RiderRoute[] = [];
   selectedRiderId: number | null = null;
@@ -85,15 +87,15 @@ export class RouteOptimization implements OnInit, AfterViewInit, OnDestroy {
 
   // สีประจำตัวไรเดอร์แต่ละคัน
   private readonly riderColors = [
-  '#d62828', '#0077b6', '#2a9d8f', '#f77f00', '#6a4c93', // 1-5
-  '#e76f51', '#264653', '#e9c46a', '#43aa8b', '#f8961e', // 6-10
-  '#577590', '#f3722c', '#4d908e', '#90be6d', '#f9844a', // 11-15
-  '#b5179e', '#7209b7', '#4361ee', '#4cc9f0', '#3a0ca3', // 16-20
-  '#ff006e', '#fb8500', '#8338ec', '#023e8a', '#0096c7', // 21-25
-  '#52b788', '#d90429', '#ef233c', '#8d99ae', '#2b2d42'  // 26-30
-];
+    '#d62828', '#0077b6', '#2a9d8f', '#f77f00', '#6a4c93', // 1-5
+    '#e76f51', '#264653', '#e9c46a', '#43aa8b', '#f8961e', // 6-10
+    '#577590', '#f3722c', '#4d908e', '#90be6d', '#f9844a', // 11-15
+    '#b5179e', '#7209b7', '#4361ee', '#4cc9f0', '#3a0ca3', // 16-20
+    '#ff006e', '#fb8500', '#8338ec', '#023e8a', '#0096c7', // 21-25
+    '#52b788', '#d90429', '#ef233c', '#8d99ae', '#2b2d42'  // 26-30
+  ];
 
-private cdr = inject(ChangeDetectorRef); // 👈 เพิ่มตัวแปรสำหรับบังคับอัปเดต UI
+  private cdr = inject(ChangeDetectorRef); // 👈 เพิ่มตัวแปรสำหรับบังคับอัปเดต UI
 
   ngOnInit(): void {
     const savedRiderId = localStorage.getItem(this.selectedRiderStorageKey);
@@ -101,7 +103,7 @@ private cdr = inject(ChangeDetectorRef); // 👈 เพิ่มตัวแป�
     this.fetchAndOptimizeRoutes();
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
   ngOnDestroy(): void {
     this.routeRequests.forEach(req => req.abort());
@@ -138,7 +140,7 @@ private cdr = inject(ChangeDetectorRef); // 👈 เพิ่มตัวแป�
         }
 
         // กรองเฉพาะออเดอร์ที่ยังไม่เสร็จสิ้น (status !== 'completed')
-        const pendingOrders = orders.filter(order => 
+        const pendingOrders = orders.filter(order =>
           order.status !== 'completed' && order.status !== 'Completed'
         );
 
@@ -170,7 +172,7 @@ private cdr = inject(ChangeDetectorRef); // 👈 เพิ่มตัวแป�
 
         const MAX_CAPACITY = 10;
         this.optimizedRiders = [];
-        
+
         let unassignedOrders = [...rawOrders];
         let riderIndex = 0;
 
@@ -240,21 +242,21 @@ private cdr = inject(ChangeDetectorRef); // 👈 เพิ่มตัวแป�
         this.totalBoxes = rawOrders.reduce((sum, o) => sum + o.box_count, 0);
 
         // ใน fetchAndOptimizeRoutes() และ loadSavedRoutes() หลังจากกำหนดค่า assignments เสร็จแล้ว:
-this.assignments = this.optimizedRiders.map(rider => ({
-  riderId: rider.riderId,
-  riderName: rider.riderName,
-  color: rider.color,
-  totalBoxes: rider.totalBoxes,
-  totalOrders: rider.totalOrders,
-  totalDistance: 0,
-  revenue: rider.totalOrders * 50,
-  deliveryCost: 15,
-  profit: (rider.totalOrders * 50) - 15,
-  duration: 0,
-  orders: rider.stops.map(s => `${s.customerName} (${s.boxCount} กล่อง)`)
-}));
+        this.assignments = this.optimizedRiders.map(rider => ({
+          riderId: rider.riderId,
+          riderName: rider.riderName,
+          color: rider.color,
+          totalBoxes: rider.totalBoxes,
+          totalOrders: rider.totalOrders,
+          totalDistance: 0,
+          revenue: rider.totalOrders * 50,
+          deliveryCost: 15,
+          profit: (rider.totalOrders * 50) - 15,
+          duration: 0,
+          orders: rider.stops.map(s => `${s.customerName} (${s.boxCount} กล่อง)`)
+        }));
 
-this.cdr.detectChanges(); // 👈 บังคับให้ Angular อัปเดตหน้าจอฝั่งขวาทันทีโดยไม่ต้องรอคลิกปุ่ม
+        this.cdr.detectChanges(); // 👈 บังคับให้ Angular อัปเดตหน้าจอฝั่งขวาทันทีโดยไม่ต้องรอคลิกปุ่ม
 
         this.routeStatus = `จัดสรรงานสำเร็จ (${this.optimizedRiders.length} คัน)`;
 
@@ -355,7 +357,7 @@ this.cdr.detectChanges(); // 👈 บังคับให้ Angular อัป�
 
     this.riderFormError = '';
     this.isSavingRider = true;
-    
+
     this.http.post('https://project-adv-webx.vercel.app/api/riders', {
       name: name.trim(),
       phone: phone.trim(),
@@ -542,19 +544,37 @@ this.cdr.detectChanges(); // 👈 บังคับให้ Angular อัป�
       const calculatedDistance = Number((route.distance / 1000).toFixed(2));
       const calculatedDuration = Math.ceil(route.duration / 60);
 
-      // อัปเดตระยะทางและเวลาเดินทางในการ์ดของไรเดอร์คนนั้น
+      // 💰 กำหนดตัวแปรสูตรการเงิน (Financial Model)
+      const pricePerBox = 65; // ราคาขายต่อกล่อง
+      const costPerBox = 40;   // ต้นทุนสินค้าต่อกล่อง
+      const fixedFee = 15;     // ค่ารอบคงที่ไรเดอร์
+      const ratePerKm = 2;     // ค่าบริการตามระยะทางต่อ กม.
+
+      // อัปเดตระยะทาง เวลา และกำไรสุทธิในการ์ดของไรเดอร์คนนั้น
       this.assignments = this.assignments.map((assignment) => {
         if (assignment.riderId === rider.riderId) {
+          const totalBoxes = assignment.totalBoxes;
+          const revenue = (pricePerBox - costPerBox) * totalBoxes;
+          const deliveryCost = fixedFee + (ratePerKm * calculatedDistance * totalBoxes);
+          const profit = Number((revenue - deliveryCost).toFixed(2));
+
           return {
             ...assignment,
             totalDistance: calculatedDistance,
             duration: calculatedDuration,
+            revenue,
+            deliveryCost,
+            profit
           };
         }
         return assignment;
       });
 
-      this.routeStatus = 'คำนวณเส้นทางถนนจริงสำเร็จ';
+      // 🟢 คำนวณสรุปรวมทั้งร้าน
+      this.totalRevenue = Number(this.assignments.reduce((sum, item) => sum + (item.revenue || 0), 0).toFixed(2));
+      this.totalProfit = Number(this.assignments.reduce((sum, item) => sum + (item.profit || 0), 0).toFixed(2));
+      this.totalDeliveryCost = Number(this.assignments.reduce((sum, item) => sum + (item.deliveryCost || 0), 0).toFixed(2));
+      this.cdr.detectChanges();
     } catch (error) {
       if (controller.signal.aborted) return;
       console.error(`Unable to load road route for rider ${rider.riderName}`, error);
